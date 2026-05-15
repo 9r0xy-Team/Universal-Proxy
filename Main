@@ -629,7 +629,7 @@ iframe {
 </div>
 
 <header>
-  <h1><span>🛡️</span> Universal Proxy</h1>
+  <h1><span>⭐</span> Universal Proxy</h1>
   <button class="cloak-btn" id="cloakBtn" title="Cloak tab to about:blank">🔒 Cloak Tab</button>
   <nav>
     <a href="#">Dashboard</a>
@@ -1000,185 +1000,114 @@ async function performSearch(query) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     
-    // Generic search result parsing
-    const links = doc.querySelectorAll('a[href*="http"]');
-    links.forEach((link, idx) => {
-      if (idx > 15) return;
-      const title = link.textContent.trim();
-      const url = link.href;
-      if (title && url && !url.includes('search')) {
-        results.push({ title, url });
+    // Extract results (simplified)
+    const resultElements = doc.querySelectorAll('a[href*="search"], [data-result]');
+    resultElements.forEach((el, idx) => {
+      if (idx < 10) {
+        results.push({
+          title: el.textContent.slice(0, 50),
+          url: el.href
+        });
       }
     });
     
-    displaySearchResults(results);
-    addLog(`✓ Found ${results.length} results for "${query}"`, 'success');
+    if (results.length === 0) {
+      searchResults.innerHTML = '<div style="color: #b8a8d1; text-align: center; padding: 2rem;">No results found</div>';
+    } else {
+      searchResults.innerHTML = results.map(r => `
+        <div class="search-result-card" onclick="loadUrl('${r.url}')">
+          <h3>${r.title}</h3>
+          <div class="url">${r.url}</div>
+        </div>
+      `).join('');
+    }
+    addLog(`✅ Found ${results.length} results`, 'success');
   } catch (err) {
-    searchResults.innerHTML = `<div style="color: #f87171; text-align: center; padding: 2rem;">❌ Search failed: ${err.message}</div>`;
-    addLog(`✗ Search error: ${err.message}`, 'error');
+    searchResults.innerHTML = `<div style="color: #f87171; text-align: center; padding: 2rem;">Error: ${err.message}</div>`;
+    addLog(`❌ Search failed: ${err.message}`, 'error');
   }
 }
 
-function displaySearchResults(results) {
-  searchResults.innerHTML = '';
-  
-  if (results.length === 0) {
-    searchResults.innerHTML = '<div style="color: #b8a8d1; text-align: center; padding: 2rem;">No results found</div>';
-    return;
-  }
-  
-  results.forEach(result => {
-    const card = document.createElement('div');
-    card.className = 'search-result-card';
-    card.innerHTML = `
-      <h3>${result.title || 'Untitled'}</h3>
-      <p>${result.description || 'No description available'}</p>
-      <div class="url">${result.url}</div>
-    `;
-    card.addEventListener('click', () => {
-      urlInput.value = result.url;
-      loadProxy(result.url);
-      searchResultsPanel.classList.remove('show');
-    });
-    searchResults.appendChild(card);
-  });
+async function loadUrl(url) {
+  urlInput.value = url;
+  handleGo();
 }
 
-// ---------- CORE PROXY FUNCTION ----------
-async function loadProxy(target) {
-  // Rate limit
-  const now = Date.now();
-  state.timestamps = state.timestamps.filter(t => now - t < 60000);
-  if (state.timestamps.length >= settings.rateLimit) {
-    feedback.textContent = '⚠ Rate limit exceeded. Please wait...';
+async function handleGo() {
+  const input = urlInput.value.trim();
+  if (!input) {
+    feedback.textContent = '⚠️ Enter a URL or search term';
     feedback.className = 'error';
-    state.blocked++;
-    updateStats();
-    addLog(`Rate limit blocked: ${target}`, 'warn');
-    loadingOverlay.style.display = 'none';
     return;
   }
-  state.timestamps.push(now);
-
-  // Cache
-  const cached = cache.get(target);
-  if (cached && (now - cached.time < settings.cacheTtl * 1000)) {
-    state.cacheHits++;
-    updateStats();
-    addLog(`✓ Cache hit: ${target}`, 'success');
-    const blob = new Blob([cached.html], { type: 'text/html; charset=utf-8' });
-    iframe.src = URL.createObjectURL(blob);
-    loadingOverlay.style.display = 'none';
-    feedback.textContent = 'Loaded from cache ✓';
-    feedback.className = 'valid';
-    searchResultsPanel.classList.remove('show');
-    return;
+  
+  state.requests++;
+  updateStats();
+  
+  let targetUrl;
+  if (isValidURL(input)) {
+    targetUrl = input;
+    feedback.textContent = '🔄 Loading...';
+    feedback.className = 'info';
+  } else if (isSearchQuery(input)) {
+    feedback.textContent = '🔍 Searching...';
+    feedback.className = 'info';
+    return performSearch(input);
+  } else {
+    targetUrl = 'https://' + input;
+    feedback.textContent = '🔄 Loading...';
+    feedback.className = 'info';
   }
-
-  loadingOverlay.style.display = 'flex';
-  feedback.textContent = 'Fetching…';
-  feedback.className = 'info';
-  searchResultsPanel.classList.remove('show');
-  const startTime = performance.now();
-
+  
   try {
-    const proxyUrl = buildProxyUrl(target);
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), settings.requestTimeout);
+    const proxyUrl = buildProxyUrl(targetUrl);
+    loadingOverlay.style.display = 'flex';
     
+    const start = Date.now();
     const resp = await fetch(proxyUrl, {
-      signal: controller.signal,
       headers: {
         'User-Agent': settings.userAgent === 'random' ? getRandomUserAgent() : USER_AGENTS[settings.userAgent]
       }
     });
+    const elapsed = Date.now() - start;
     
-    clearTimeout(timeoutId);
-    
-    if (!resp.ok) {
-      throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-    }
-    
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     let html = await resp.text();
-    html = rewriteHtml(html, target);
     
-    const elapsedTime = Math.round(performance.now() - startTime);
-    state.totalTime += elapsedTime;
-    state.avgTime = Math.round(state.totalTime / ++state.requests);
+    html = rewriteHtml(html, targetUrl);
+    state.totalTime += elapsed;
+    state.avgTime = Math.round(state.totalTime / state.requests);
     
-    const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    iframe.src = url;
-    
-    cache.set(target, { html, time: now });
-    state.cacheSize += html.length;
-    
-    feedback.textContent = `✓ Loaded in ${elapsedTime}ms`;
+    iframe.srcdoc = html;
+    loadingOverlay.style.display = 'none';
+    feedback.textContent = `✅ Loaded in ${elapsed}ms`;
     feedback.className = 'valid';
-    
-    addLog(`✓ ${target} (${elapsedTime}ms)`, 'success');
-    updateStats();
-    
+    addLog(`✅ Loaded ${targetUrl} (${elapsed}ms)`, 'success');
   } catch (err) {
-    addLog(`✗ Failed: ${err.message}`, 'error');
-    feedback.textContent = `✗ Error: ${err.message}`;
+    loadingOverlay.style.display = 'none';
+    feedback.textContent = `❌ ${err.message}`;
     feedback.className = 'error';
     state.blocked++;
     updateStats();
-  } finally {
-    loadingOverlay.style.display = 'none';
+    addLog(`❌ Failed to load: ${err.message}`, 'error');
   }
 }
 
-// ---------- EVENT LISTENERS ----------
-goBtn.addEventListener('click', () => {
-  const target = urlInput.value.trim();
-  if (!target) {
-    feedback.textContent = '⚠ Please enter a URL or search query';
-    feedback.className = 'error';
-    return;
-  }
-  
-  if (isSearchQuery(target)) {
-    performSearch(target);
-  } else if (isValidURL(target)) {
-    loadProxy(target);
-  } else {
-    const guess = (target.includes('.') ? 'https://' : 'https://www.') + target;
-    if (isValidURL(guess)) {
-      loadProxy(guess);
-    } else {
-      performSearch(target);
-    }
-  }
-});
-
+goBtn.addEventListener('click', handleGo);
 urlInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') goBtn.click();
+  if (e.key === 'Enter') handleGo();
 });
 
 toggleAdvanced.addEventListener('change', () => {
   advancedPanel.classList.toggle('show');
+  if (toggleAdvanced.checked) {
+    addLog('⚙️ Advanced settings opened', 'info');
+  } else {
+    addLog('⚙️ Advanced settings closed', 'info');
+  }
 });
 
-// Filter logs
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.currentFilter = btn.dataset.filter;
-    
-    document.querySelectorAll('.log-entry').forEach(entry => {
-      if (state.currentFilter === 'all' || entry.dataset.level === state.currentFilter) {
-        entry.style.display = '';
-      } else {
-        entry.style.display = 'none';
-      }
-    });
-  });
-});
-
-// Settings
+// Apply settings
 document.getElementById('applySettings')?.addEventListener('click', () => {
   settings.rateLimit = parseInt(document.getElementById('rateLimit').value);
   settings.cacheTtl = parseInt(document.getElementById('cacheTtl').value);
@@ -1188,32 +1117,46 @@ document.getElementById('applySettings')?.addEventListener('click', () => {
   settings.proxyApi = document.getElementById('proxyApi').value;
   settings.linkRewrite = document.getElementById('linkRewrite').value;
   settings.searchEngine = document.getElementById('searchEngine').value;
-  
-  addLog('⚙️ Settings applied', 'info');
-  feedback.textContent = '✓ Settings saved!';
-  feedback.className = 'valid';
+  addLog('✅ Settings applied', 'success');
 });
 
+// Clear cache
 document.getElementById('clearCache')?.addEventListener('click', () => {
   cache.clear();
+  state.cacheHits = 0;
   state.cacheSize = 0;
   updateStats();
-  addLog('🗑️ Cache cleared', 'warn');
-  feedback.textContent = '✓ Cache cleared!';
-  feedback.className = 'valid';
+  addLog('🗑️ Cache cleared', 'success');
 });
 
+// Download page
 document.getElementById('downloadPage')?.addEventListener('click', () => {
-  if (iframe.src) {
-    const link = document.createElement('a');
-    link.href = iframe.src;
-    link.download = `page_${Date.now()}.html`;
-    link.click();
-    addLog('⬇️ Page downloaded', 'success');
-  }
+  const link = document.createElement('a');
+  link.href = 'data:text/html,' + encodeURIComponent(iframe.srcdoc || 'No page loaded');
+  link.download = 'page.html';
+  link.click();
+  addLog('📥 Page download started', 'success');
 });
 
-// Initialize
+// Log filters
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.currentFilter = btn.dataset.filter;
+    
+    const entries = logsContainer.querySelectorAll('.log-entry');
+    entries.forEach(entry => {
+      if (state.currentFilter === 'all' || entry.dataset.level === state.currentFilter) {
+        entry.style.display = 'block';
+      } else {
+        entry.style.display = 'none';
+      }
+    });
+  });
+});
+
+// Initial update
 updateStats();
 </script>
 
