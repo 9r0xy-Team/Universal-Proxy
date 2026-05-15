@@ -1,3 +1,4 @@
+<img src="https://lh3.googleusercontent.com/sitesv/AA5AbUDzGBtOkZuk20IQz6rqed8KjtvctJUz-LJvdUmhfOCAI-qpGvN84YWuu0iVUMpDBVhL_fLLFtG8DlBt9VmCA2kAsvvekCJqXQ5LcdOeSjg_F79h8nUvDoVcQkj9FW8iw_igegnjRJ2AqoI11RzI3Sq-umqJQODL38GB9muNgQKwYWelEl7rlmo1c8s=w1280"/>
 # Universal Proxy
 
 Universal Proxy (formerly StrongGuardian+). This repository contains the frontend code for a lightweight universal proxy UI and previewer.
