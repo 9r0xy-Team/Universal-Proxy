@@ -67,6 +67,29 @@ nav a:hover::after {
   width: 100%;
 }
 
+.cloak-btn {
+  background: linear-gradient(135deg, #86efac, #10b981);
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-left: auto;
+  margin-right: 1rem;
+}
+
+.cloak-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(134, 239, 172, 0.4);
+}
+
+.cloak-btn:active {
+  transform: translateY(0);
+}
+
 .container { 
   flex: 1; 
   padding: 2rem; 
@@ -536,6 +559,7 @@ iframe {
 
 <header>
   <h1><span>🛡️</span> Universal Proxy</h1>
+  <button class="cloak-btn" id="cloakBtn" title="Cloak tab to about:blank">🔒 Cloak Tab</button>
   <nav>
     <a href="#">Dashboard</a>
     <a href="#">Advanced</a>
@@ -728,6 +752,7 @@ const toggleAdvanced = document.getElementById('toggleAdvanced');
 const throttleIndicator = document.getElementById('throttleIndicator');
 const searchResultsPanel = document.getElementById('searchResultsPanel');
 const searchResults = document.getElementById('searchResults');
+const cloakBtn = document.getElementById('cloakBtn');
 
 const statRequests = document.getElementById('statRequests');
 const statCache = document.getElementById('statCache');
@@ -735,6 +760,19 @@ const statBlocked = document.getElementById('statBlocked');
 const statSpeed = document.getElementById('statSpeed');
 const statUptime = document.getElementById('statUptime');
 const statCacheSize = document.getElementById('statCacheSize');
+
+// ---------- CLOAK FUNCTIONALITY ----------
+function cloakTab() {
+  try {
+    window.location.href = 'about:blank';
+    addLog('🔒 Tab cloaked to about:blank', 'success');
+  } catch (err) {
+    addLog(`⚠ Cloak failed: ${err.message}`, 'warn');
+    window.open('about:blank', '_self');
+  }
+}
+
+cloakBtn.addEventListener('click', cloakTab);
 
 // ---------- HELPERS ----------
 function addLog(msg, level = 'info') {
@@ -996,69 +1034,37 @@ async function loadProxy(target) {
     addLog(`✗ Error loading ${target}: ${errorMsg} (${elapsed}ms)`, 'error');
     state.blocked++;
     updateStats();
-    
-    // Auto-retry with different API
-    if (settings.autoRetry) {
-      const apis = ['allorigins', 'corsproxy', 'jsdelivr', 'thingproxy'];
-      const currentIdx = apis.indexOf(settings.proxyApi);
-      const fallback = apis[(currentIdx + 1) % apis.length];
-      if (fallback !== settings.proxyApi) {
-        addLog(`↻ Retrying with fallback: ${fallback}`, 'warn');
-        settings.proxyApi = fallback;
-        setTimeout(() => loadProxy(target), 800);
-      }
-    }
-  } finally {
-    loadingOverlay.style.display = 'none';
   }
+  loadingOverlay.style.display = 'none';
 }
 
-// ---------- UI EVENTS ----------
-urlInput.addEventListener('input', () => {
-  const val = urlInput.value.trim();
-  if (!val) {
-    feedback.textContent = '';
-    urlInput.classList.remove('valid', 'invalid');
-    goBtn.disabled = true;
+// ---------- EVENT LISTENERS ----------
+goBtn.addEventListener('click', () => {
+  const input = urlInput.value.trim();
+  if (!input) {
+    feedback.textContent = 'Please enter a URL or search query';
+    feedback.className = 'error';
     return;
   }
-  if (isValidURL(val) || isSearchQuery(val)) {
-    feedback.textContent = isValidURL(val) ? '✓ Valid URL' : '🔎 Search query';
-    feedback.className = 'valid';
-    urlInput.classList.add('valid'); 
-    urlInput.classList.remove('invalid');
-    goBtn.disabled = false;
-  } else {
-    feedback.textContent = '✗ Invalid input';
-    feedback.className = 'error';
-    urlInput.classList.add('invalid'); 
-    urlInput.classList.remove('valid');
-    goBtn.disabled = true;
-  }
-});
-
-goBtn.addEventListener('click', () => {
-  const target = urlInput.value.trim();
-  if (!target) return;
   
-  if (isValidURL(target)) {
-    iframe.src = 'about:blank';
-    setTimeout(() => loadProxy(target), 100);
-  } else if (isSearchQuery(target)) {
-    performSearch(target);
+  if (isValidURL(input)) {
+    loadProxy(input);
+  } else if (isSearchQuery(input)) {
+    performSearch(input);
+  } else {
+    feedback.textContent = '✗ Invalid URL or search query';
+    feedback.className = 'error';
   }
 });
 
-urlInput.addEventListener('keydown', e => { 
-  if (e.key === 'Enter') goBtn.click(); 
+urlInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') goBtn.click();
 });
 
-// Advanced panel toggle
 toggleAdvanced.addEventListener('change', () => {
-  advancedPanel.classList.toggle('show', toggleAdvanced.checked);
+  advancedPanel.classList.toggle('show');
 });
 
-// Log filtering
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -1066,63 +1072,49 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     state.currentFilter = btn.dataset.filter;
     
     document.querySelectorAll('.log-entry').forEach(entry => {
-      if (state.currentFilter === 'all') {
-        entry.style.display = '';
+      if (state.currentFilter === 'all' || entry.dataset.level === state.currentFilter) {
+        entry.style.display = 'block';
       } else {
-        entry.style.display = entry.dataset.level === state.currentFilter ? '' : 'none';
+        entry.style.display = 'none';
       }
     });
   });
 });
 
-// Settings
 document.getElementById('applySettings').addEventListener('click', () => {
-  settings.rateLimit = parseInt(document.getElementById('rateLimit').value) || 60;
-  settings.cacheTtl = parseInt(document.getElementById('cacheTtl').value) || 120;
-  settings.requestTimeout = parseInt(document.getElementById('requestTimeout').value) || 20000;
+  settings.rateLimit = parseInt(document.getElementById('rateLimit').value);
+  settings.cacheTtl = parseInt(document.getElementById('cacheTtl').value);
+  settings.requestTimeout = parseInt(document.getElementById('requestTimeout').value);
+  settings.autoRetry = document.getElementById('autoRetry').value === 'true';
   settings.userAgent = document.getElementById('userAgent').value;
   settings.proxyApi = document.getElementById('proxyApi').value;
-  settings.autoRetry = document.getElementById('autoRetry').value === 'true';
   settings.linkRewrite = document.getElementById('linkRewrite').value;
   settings.searchEngine = document.getElementById('searchEngine').value;
-  addLog(`⚙️ Settings updated: rate=${settings.rateLimit}, cache=${settings.cacheTtl}s, api=${settings.proxyApi}`, 'warn');
+  addLog('✓ Settings applied', 'success');
 });
 
 document.getElementById('clearCache').addEventListener('click', () => {
   cache.clear();
   state.cacheSize = 0;
-  state.cacheHits = 0;
   updateStats();
-  addLog('🗑️ Cache cleared', 'warn');
+  addLog('🗑️ Cache cleared', 'info');
 });
 
 document.getElementById('downloadPage').addEventListener('click', () => {
-  const lastUrl = urlInput.value.trim();
-  if (!lastUrl) { 
-    addLog('⚠ No page loaded yet', 'error'); 
-    return; 
+  if (!iframe.src) {
+    addLog('⚠ No page loaded', 'warn');
+    return;
   }
-  const cached = cache.get(lastUrl);
-  if (!cached) { 
-    addLog('⚠ Page not in cache, reload first', 'error'); 
-    return; 
-  }
-  const blob = new Blob([cached.html], { type: 'text/html; charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'proxied-page.html';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  addLog('✓ Page downloaded', 'success');
+  
+  const link = document.createElement('a');
+  link.href = iframe.src;
+  link.download = 'page.html';
+  link.click();
+  addLog('⬇️ Download started', 'success');
 });
 
 // Initialize
-iframe.src = 'about:blank';
-const defaultUrl = 'https://www.google.com';
-urlInput.value = defaultUrl;
-addLog('🚀 Universal Proxy v5.0 – Search & multi-site support enabled', 'info');
-addLog('✓ Supports: now.gg, gaming sites, search engines, and more', 'info');
-setTimeout(() => loadProxy(defaultUrl), 500);
+updateStats();
 </script>
 </body>
 </html>
