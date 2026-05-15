@@ -1,4 +1,4 @@
-<img src="https://lh3.googleusercontent.com/sitesv/AA5AbUDzGBtOkZuk20IQz6rqed8KjtvctJUz-LJvdUmhfOCAI-qpGvN84YWuu0iVUMpDBVhL_fLLFtG8DlBt9VmCA2kAsvvekCJqXQ5LcdOeSjg_F79h8nUvDoVcQkj9FW8iw_igegnjRJ2AqoI11RzI3Sq-umqJQODL38GB9muNgQKwYWelEl7rlmo1c8s=w1280"/>
+
 # Universal Proxy
 
 Universal Proxy (formerly StrongGuardian+). This repository contains the frontend code for a lightweight universal proxy UI and previewer.
@@ -24,3 +24,5 @@ B: By already getting into this site, you have already agreed with them, so if a
 T: This code is intended as a learning tool and not a real proxy. It was created as a dummy example for educational purposes, specifically for schools. My goal is to help with education and learning, which is why I'm learning from Sigma AI.
 
 L:Last thing I say, I have this code licensed from Github, and the CC will be down.
+
+<img src="https://lh3.googleusercontent.com/sitesv/AA5AbUDzGBtOkZuk20IQz6rqed8KjtvctJUz-LJvdUmhfOCAI-qpGvN84YWuu0iVUMpDBVhL_fLLFtG8DlBt9VmCA2kAsvvekCJqXQ5LcdOeSjg_F79h8nUvDoVcQkj9FW8iw_igegnjRJ2AqoI11RzI3Sq-umqJQODL38GB9muNgQKwYWelEl7rlmo1c8s=w1280"/>
