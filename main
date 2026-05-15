@@ -1,0 +1,449 @@
+make this more better<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>StrongGuardian+ · Universal Proxy</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+background: linear-gradient(135deg, #0b0e14, #141a24);
+color: #d1d5db;
+min-height: 100vh;
+display: flex; flex-direction: column;
+}
+header {
+background: #151c25;
+padding: 0.8rem 1.5rem;
+display: flex; align-items: center; justify-content: space-between;
+border-bottom: 2px solid #3b82f6;
+}
+header h1 { font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+header h1 span { color: #3b82f6; }
+nav a { color: #9ca3af; text-decoration: none; margin-left: 1.2rem; font-size: 0.9rem; transition: color 0.2s; }
+nav a:hover { color: #3b82f6; }
+.container { flex: 1; padding: 1.5rem; max-width: 1400px; margin: 0 auto; width: 100%; }
+.card {
+background: rgba(31,41,55,0.85); backdrop-filter: blur(4px); border-radius: 12px; padding: 1.2rem;
+margin-bottom: 1.2rem; border: 1px solid #374151; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+.card-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.8rem; color: #e5e7eb; display: flex; align-items: center; gap: 0.5rem; }
+.input-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.input-group input {
+flex: 1; min-width: 200px; padding: 0.7rem 1rem; border: 2px solid #4b5563; border-radius: 8px;
+background: #111827; color: #e5e7eb; font-size: 0.95rem; outline: none; transition: all 0.2s;
+}
+.input-group input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.3); }
+.input-group input::placeholder { color: #6b7280; }
+.input-group input.valid { border-color: #22c55e; }
+.input-group input.invalid { border-color: #ef4444; }
+.input-group button {
+padding: 0.7rem 1.5rem; background: #3b82f6; color: #fff; border: none; border-radius: 8px;
+font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.1s;
+}
+.input-group button:hover { background: #2563eb; transform: scale(1.02); }
+.input-group button:disabled { background: #4b5563; cursor: not-allowed; transform: none; }
+#feedback { font-size: 0.85rem; margin-top: 0.4rem; min-height: 1.2em; }
+#feedback.valid { color: #22c55e; }
+#feedback.info { color: #3b82f6; }
+#feedback.error { color: #ef4444; }
+.stats-row { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: space-between; }
+.stat-item {
+background: #111827; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid #374151;
+flex: 1; min-width: 100px; text-align: center; transition: background 0.3s;
+}
+.stat-item:hover { background: #1f2937; }
+.stat-item .value { font-size: 1.6rem; font-weight: 800; color: #3b82f6; }
+.stat-item .label { font-size: 0.75rem; color: #9ca3af; margin-top: 0.2rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.settings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+.setting-item { display: flex; flex-direction: column; gap: 0.3rem; }
+.setting-item label { font-size: 0.8rem; color: #9ca3af; font-weight: 500; }
+.setting-item input, .setting-item select {
+padding: 0.5rem; border: 1px solid #4b5563; border-radius: 6px; background: #111827; color: #e5e7eb; font-size: 0.85rem; outline: none;
+}
+.setting-item button, .setting-item .action-btn {
+padding: 0.5rem 0.8rem; background: #374151; color: #e5e7eb; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s;
+}
+.setting-item button:hover { background: #4b5563; }
+.logs-box {
+background: #0f172a; border: 1px solid #1e293b; border-radius: 6px; padding: 0.5rem;
+max-height: 140px; overflow-y: auto; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.75rem; color: #94a3b8;
+}
+.logs-box .log-entry { margin-bottom: 0.2rem; padding: 0.1rem 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.iframe-wrapper {
+width: 100%; height: 68vh; border: 1px solid #374151; border-radius: 10px; overflow: hidden;
+position: relative; background: #111827; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+}
+iframe { width: 100%; height: 100%; border: none; }
+.loading-overlay {
+position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+background: rgba(17,24,39,0.9); display: flex; align-items: center; justify-content: center;
+color: #3b82f6; font-size: 1.3rem; display: none; z-index: 10; flex-direction: column; gap: 1rem;
+}
+.loading-overlay .spinner {
+width: 40px; height: 40px; border: 4px solid #374151; border-top-color: #3b82f6; border-radius: 50%;
+animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.footer {
+background: #151c25; padding: 0.7rem 1.5rem; text-align: center; border-top: 1px solid #2a3744;
+font-size: 0.8rem; color: #6b7280;
+}
+.advanced-toggle { display: flex; gap: 0.5rem; align-items: center; cursor: pointer; margin-top: 0.5rem; }
+.advanced-toggle input[type="checkbox"] { width: auto; }
+.hidden-panel { display: none; }
+.hidden-panel.show { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+<h1><span>🛡️</span> StrongGuardian+</h1>
+<nav>
+<a href="#">Dashboard</a>
+<a href="#">Logs</a>
+<a href="#">Pro Tools</a>
+</nav>
+</header>
+
+<div class="container">
+<!-- Main input -->
+<div class="card">
+<div class="card-title">🌐 Enter any URL</div>
+<div class="input-group">
+<input type="text" id="urlInput" placeholder="https://google.com" autocomplete="off">
+<button id="goBtn">Go</button>
+</div>
+<div id="feedback"></div>
+<div class="advanced-toggle">
+<label>☰ Advanced options</label>
+<input type="checkbox" id="toggleAdvanced">
+</div>
+</div>
+
+<!-- Advanced panel (hidden) -->
+<div class="card hidden-panel" id="advancedPanel">
+<div class="card-title">⚙️ Advanced Settings</div>
+<div class="settings-grid">
+<div class="setting-item">
+<label>Rate limit (req/min)</label>
+<input type="number" id="rateLimit" value="20" min="1" max="200">
+</div>
+<div class="setting-item">
+<label>Cache TTL (seconds)</label>
+<input type="number" id="cacheTtl" value="30" min="0" max="600">
+</div>
+<div class="setting-item">
+<label>User‑Agent rotation</label>
+<select id="userAgent">
+<option value="random">Random</option>
+<option value="Mozilla/5.0 (Windows NT 10.0; Win64; x64)">Windows Chrome</option>
+<option value="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)">Mac Safari</option>
+<option value="Mozilla/5.0 (X11; Linux x86_64)">Linux Firefox</option>
+</select>
+</div>
+<div class="setting-item">
+<label>Weebly‑only mode</label>
+<select id="weeblyOnly">
+<option value="no">No (all URLs)</option>
+<option value="yes">Yes (trusted)</option>
+</select>
+</div>
+<div class="setting-item">
+<label>Fallback proxy API</label>
+<select id="proxyApi">
+<option value="allorigins">api.allorigins.win</option>
+<option value="corsproxy">corsproxy.io</option>
+<option value="thingproxy">thingproxy.freeboard.io</option>
+</select>
+</div>
+<div class="setting-item" style="grid-column: span 2; display: flex; gap: 0.5rem;">
+<button id="applySettings">Apply</button>
+<button id="clearCache">Clear cache</button>
+<button id="downloadPage">Download current page</button>
+</div>
+</div>
+</div>
+
+<!-- Stats -->
+<div class="card">
+<div class="card-title">📊 Live Performance</div>
+<div class="stats-row">
+<div class="stat-item"><div class="value" id="statRequests">0</div><div class="label">Requests</div></div>
+<div class="stat-item"><div class="value" id="statCache">0</div><div class="label">Cache hits</div></div>
+<div class="stat-item"><div class="value" id="statBlocked">0</div><div class="label">Blocked</div></div>
+<div class="stat-item"><div class="value" id="statSpeed">0ms</div><div class="label">Avg latency</div></div>
+<div class="stat-item"><div class="value" id="statUptime">100%</div><div class="label">Uptime (simulated)</div></div>
+</div>
+</div>
+
+<!-- Logs -->
+<div class="card">
+<div class="card-title">📜 Request Log <span style="font-size:0.7rem;color:#6b7280;">(last 100)</span></div>
+<div class="logs-box" id="logsContainer"><div class="log-entry">[INFO] StrongGuardian+ started</div></div>
+</div>
+
+<!-- Iframe -->
+<div class="card">
+<div class="card-title">🔍 Preview</div>
+<div class="iframe-wrapper">
+<div class="loading-overlay" id="loadingOverlay">
+<div class="spinner"></div>
+<span>Loading site …</span>
+</div>
+<iframe id="proxyFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+</div>
+</div>
+</div>
+
+<div class="footer">StrongGuardian+ v3.0 · Universal proxy · Works with any URL</div>
+
+<script>
+// ---------- STATE ----------
+const state = {
+requests: 0,
+cacheHits: 0,
+blocked: 0,
+totalTime: 0,
+avgTime: 0,
+timestamps: [],
+uptime: 100
+};
+
+let settings = {
+rateLimit: 20,
+cacheTtl: 30,
+userAgent: 'random',
+weeblyOnly: false, // Default: allow all URLs
+proxyApi: 'allorigins'
+};
+
+const cache = new Map();
+
+// DOM refs
+const urlInput = document.getElementById('urlInput');
+const goBtn = document.getElementById('goBtn');
+const feedback = document.getElementById('feedback');
+const iframe = document.getElementById('proxyFrame');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const logsContainer = document.getElementById('logsContainer');
+const advancedPanel = document.getElementById('advancedPanel');
+const toggleAdvanced = document.getElementById('toggleAdvanced');
+
+const statRequests = document.getElementById('statRequests');
+const statCache = document.getElementById('statCache');
+const statBlocked = document.getElementById('statBlocked');
+const statSpeed = document.getElementById('statSpeed');
+const statUptime = document.getElementById('statUptime');
+
+// ---------- Helpers ----------
+function addLog(msg, level = 'info') {
+const color = level === 'error' ? '#ef4444' : level === 'warn' ? '#f59e0b' : level === 'success' ? '#22c55e' : '#94a3b8';
+const time = new Date().toLocaleTimeString();
+const entry = document.createElement('div');
+entry.className = 'log-entry';
+entry.style.color = color;
+entry.textContent = `[${time}][${level.toUpperCase()}] ${msg}`;
+logsContainer.appendChild(entry);
+logsContainer.scrollTop = logsContainer.scrollHeight;
+if (logsContainer.children.length > 100) logsContainer.removeChild(logsContainer.firstChild);
+}
+
+function updateStats() {
+statRequests.textContent = state.requests;
+statCache.textContent = state.cacheHits;
+statBlocked.textContent = state.blocked;
+statSpeed.textContent = state.avgTime + 'ms';
+statUptime.textContent = state.uptime + '%';
+}
+
+function isValidURL(s) {
+try { const u = new URL(s); return u.protocol === 'http:' || u.protocol === 'https:'; }
+catch { return false; }
+}
+
+// Build proxy URL using selected API
+function buildProxyUrl(target) {
+const api = settings.proxyApi;
+let base = '';
+if (api === 'allorigins') base = 'https://api.allorigins.win/raw?url=';
+else if (api === 'corsproxy') base = 'https://corsproxy.io/?' + encodeURIComponent(target);
+else if (api === 'thingproxy') base = 'https://thingproxy.freeboard.io/fetch/' + encodeURIComponent(target);
+else base = `https://api.allorigins.win/raw?url=`;
+return base + encodeURIComponent(target);
+}
+
+// Rewrite links
+function rewriteHtml(html, baseUrl) {
+// Remove frame-busting
+html = html.replace(/<script[^>]*>.*?window\.top\.location.*?<\/script>/gis, '');
+html = html.replace(/<meta[^>]*http-equiv=["']refresh["'][^>]*>/gi, '');
+
+html = html.replace(/(src|href|action)=(["'])((?:https?:)?\/\/[^"'\s]+|(?:\/[^"'\s]*))\2/gi, (match, attr, quote, url) => {
+let absolute;
+try { absolute = new URL(url, baseUrl).href; } catch { return match; }
+if (settings.weeblyOnly) {
+const host = new URL(absolute).hostname;
+if (!host.endsWith('.weebly.com') && host !== 'weebly.com') return match;
+}
+const proxied = buildProxyUrl(absolute);
+return `${attr}=${quote}${proxied}${quote}`;
+});
+
+html = html.replace(/<form\s/gi, '<form target="_blank" ');
+return html;
+}
+
+// ---------- Core proxy function ----------
+async function loadProxy(target) {
+// Rate limit
+const now = Date.now();
+state.timestamps = state.timestamps.filter(t => now - t < 60000);
+if (state.timestamps.length >= settings.rateLimit) {
+feedback.textContent = '⚠ Rate limit exceeded. Wait a moment.';
+feedback.className = 'error';
+state.blocked++;
+updateStats();
+addLog(`Rate limit blocked: ${target}`, 'warn');
+loadingOverlay.style.display = 'none';
+return;
+}
+state.timestamps.push(now);
+
+// Cache
+const cached = cache.get(target);
+if (cached && (now - cached.time < settings.cacheTtl * 1000)) {
+state.cacheHits++;
+updateStats();
+addLog(`Cache hit: ${target}`, 'success');
+const blob = new Blob([cached.html], { type: 'text/html' });
+iframe.src = URL.createObjectURL(blob);
+loadingOverlay.style.display = 'none';
+feedback.textContent = 'Loaded from cache ✓';
+feedback.className = 'valid';
+return;
+}
+
+loadingOverlay.style.display = 'flex';
+feedback.textContent = 'Fetching …';
+feedback.className = 'info';
+const startTime = performance.now();
+
+try {
+const proxyUrl = buildProxyUrl(target);
+const resp = await fetch(proxyUrl);
+if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+let html = await resp.text();
+const contentType = resp.headers.get('content-type') || '';
+if (contentType.includes('text/html')) {
+html = rewriteHtml(html, target);
+}
+
+cache.set(target, { html, time: Date.now() });
+
+const blob = new Blob([html], { type: 'text/html' });
+iframe.src = URL.createObjectURL(blob);
+
+const elapsed = Math.round(performance.now() - startTime);
+state.totalTime += elapsed;
+state.requests++;
+state.avgTime = state.requests ? Math.round(state.totalTime / state.requests) : 0;
+updateStats();
+addLog(`Loaded: ${target} (${elapsed}ms)`, 'success');
+feedback.textContent = `Loaded in ${elapsed}ms ✓`;
+feedback.className = 'valid';
+} catch (err) {
+feedback.textContent = `✗ Failed: ${err.message}`;
+feedback.className = 'error';
+addLog(`Error loading ${target}: ${err.message}`, 'error');
+state.blocked++;
+updateStats();
+// Try fallback proxy automatically
+if (settings.proxyApi !== 'thingproxy') {
+const fallback = settings.proxyApi === 'allorigins' ? 'corsproxy' : 'thingproxy';
+addLog(`Trying fallback proxy: ${fallback}`, 'warn');
+settings.proxyApi = fallback;
+// retry once
+setTimeout(() => loadProxy(target), 300);
+}
+} finally {
+loadingOverlay.style.display = 'none';
+}
+}
+
+// ---------- UI events ----------
+urlInput.addEventListener('input', () => {
+const val = urlInput.value.trim();
+if (!val) {
+feedback.textContent = '';
+urlInput.classList.remove('valid', 'invalid');
+goBtn.disabled = true;
+return;
+}
+if (isValidURL(val)) {
+feedback.textContent = '✓ Valid URL';
+feedback.className = 'valid';
+urlInput.classList.add('valid'); urlInput.classList.remove('invalid');
+goBtn.disabled = false;
+} else {
+feedback.textContent = '✗ Invalid URL (needs http:// or https://)';
+feedback.className = 'error';
+urlInput.classList.add('invalid'); urlInput.classList.remove('valid');
+goBtn.disabled = true;
+}
+});
+
+goBtn.addEventListener('click', () => {
+const target = urlInput.value.trim();
+if (!isValidURL(target)) return;
+iframe.src = 'about:blank';
+setTimeout(() => loadProxy(target), 100);
+});
+
+urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') goBtn.click(); });
+
+// Advanced panel toggle
+toggleAdvanced.addEventListener('change', () => {
+advancedPanel.classList.toggle('show', toggleAdvanced.checked);
+});
+
+// Settings
+document.getElementById('applySettings').addEventListener('click', () => {
+settings.rateLimit = parseInt(document.getElementById('rateLimit').value) || 20;
+settings.cacheTtl = parseInt(document.getElementById('cacheTtl').value) || 30;
+settings.userAgent = document.getElementById('userAgent').value;
+settings.weeblyOnly = document.getElementById('weeblyOnly').value === 'yes';
+settings.proxyApi = document.getElementById('proxyApi').value;
+addLog(`Settings updated: rate=${settings.rateLimit}, cache=${settings.cacheTtl}s, weeblyOnly=${settings.weeblyOnly}, proxy=${settings.proxyApi}`, 'warn');
+});
+
+document.getElementById('clearCache').addEventListener('click', () => {
+cache.clear();
+addLog('Cache cleared', 'warn');
+});
+
+// Download current page (HTML from iframe)
+document.getElementById('downloadPage').addEventListener('click', () => {
+const lastUrl = urlInput.value.trim();
+if (!lastUrl) { addLog('No page loaded yet', 'error'); return; }
+const cached = cache.get(lastUrl);
+if (!cached) { addLog('Page not in cache, reload first', 'error'); return; }
+const blob = new Blob([cached.html], { type: 'text/html' });
+const a = document.createElement('a');
+a.href = URL.createObjectURL(blob);
+a.download = 'proxied-page.html';
+a.click();
+URL.revokeObjectURL(a.href);
+addLog('Page downloaded', 'success');
+});
+
+// Initialize: Load Google on startup (but show about:blank first, then proxy)
+iframe.src = 'about:blank';
+const defaultUrl = 'https://google.com';
+urlInput.value = defaultUrl;
+addLog('StrongGuardian+ ready – loading Google by default', 'info');
+setTimeout(() => loadProxy(defaultUrl), 300);
+</script>
+</body>
+</html>
