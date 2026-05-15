@@ -15,6 +15,64 @@ body {
   flex-direction: column;
 }
 
+body.cloaked {
+  background: #fff;
+  color: #000;
+}
+
+body.cloaked header,
+body.cloaked .container,
+body.cloaked .footer,
+body.cloaked .card,
+body.cloaked nav,
+body.cloaked button {
+  display: none !important;
+}
+
+.cloak-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.cloak-overlay.active {
+  display: flex;
+}
+
+.cloak-overlay .title-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: #f0f0f0;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.cloak-exit-key {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  font-size: 0.7rem;
+  color: #999;
+  opacity: 0.5;
+  z-index: 10000;
+}
+
 header {
   background: linear-gradient(90deg, rgba(74, 31, 46, 0.8), rgba(61, 42, 74, 0.8));
   padding: 1rem 1.5rem;
@@ -88,6 +146,10 @@ nav a:hover::after {
 
 .cloak-btn:active {
   transform: translateY(0);
+}
+
+.cloak-btn.uncloak {
+  background: linear-gradient(135deg, #f87171, #c084fc);
 }
 
 .container { 
@@ -557,6 +619,15 @@ iframe {
 </head>
 <body>
 
+<div class="cloak-overlay" id="cloakOverlay">
+  <div class="title-bar">about:blank</div>
+  <div style="text-align: center;">
+    <p>The page cannot be displayed</p>
+    <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">Make sure the web address is correct.</p>
+  </div>
+  <div class="cloak-exit-key">Press Ctrl+Shift+C to return to proxy</div>
+</div>
+
 <header>
   <h1><span>🛡️</span> Universal Proxy</h1>
   <button class="cloak-btn" id="cloakBtn" title="Cloak tab to about:blank">🔒 Cloak Tab</button>
@@ -697,7 +768,7 @@ iframe {
   </div>
 </div>
 
-<div class="footer">Universal Proxy Advanced v5.0 · Premium proxy with search support · Enhanced for all sites</div>
+<div class="footer">Universal Proxy Advanced v5.1 · Premium proxy with stealth cloaking · Enhanced for all sites</div>
 
 <script>
 // ---------- ADVANCED STATE ----------
@@ -710,7 +781,8 @@ const state = {
   timestamps: [],
   uptime: 100,
   cacheSize: 0,
-  currentFilter: 'all'
+  currentFilter: 'all',
+  isCloaked: false
 };
 
 let settings = {
@@ -753,6 +825,7 @@ const throttleIndicator = document.getElementById('throttleIndicator');
 const searchResultsPanel = document.getElementById('searchResultsPanel');
 const searchResults = document.getElementById('searchResults');
 const cloakBtn = document.getElementById('cloakBtn');
+const cloakOverlay = document.getElementById('cloakOverlay');
 
 const statRequests = document.getElementById('statRequests');
 const statCache = document.getElementById('statCache');
@@ -761,18 +834,36 @@ const statSpeed = document.getElementById('statSpeed');
 const statUptime = document.getElementById('statUptime');
 const statCacheSize = document.getElementById('statCacheSize');
 
-// ---------- CLOAK FUNCTIONALITY ----------
-function cloakTab() {
-  try {
-    window.location.href = 'about:blank';
-    addLog('🔒 Tab cloaked to about:blank', 'success');
-  } catch (err) {
-    addLog(`⚠ Cloak failed: ${err.message}`, 'warn');
-    window.open('about:blank', '_self');
+// ---------- CLOAK FUNCTIONALITY (STEALTH MODE) ----------
+function toggleCloak() {
+  state.isCloaked = !state.isCloaked;
+  
+  if (state.isCloaked) {
+    // Activate cloak overlay
+    cloakOverlay.classList.add('active');
+    document.body.classList.add('cloaked');
+    cloakBtn.textContent = '👁️ Uncloak';
+    cloakBtn.classList.add('uncloak');
+    addLog('🔒 Tab cloaked - Press Ctrl+Shift+C to uncloak', 'success');
+  } else {
+    // Deactivate cloak
+    cloakOverlay.classList.remove('active');
+    document.body.classList.remove('cloaked');
+    cloakBtn.textContent = '🔒 Cloak Tab';
+    cloakBtn.classList.remove('uncloak');
+    addLog('👁️ Tab uncloaked', 'info');
   }
 }
 
-cloakBtn.addEventListener('click', cloakTab);
+cloakBtn.addEventListener('click', toggleCloak);
+
+// Keyboard shortcut: Ctrl+Shift+C to toggle cloak
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.shiftKey && e.code === 'KeyC') {
+    e.preventDefault();
+    toggleCloak();
+  }
+});
 
 // ---------- HELPERS ----------
 function addLog(msg, level = 'info') {
@@ -998,62 +1089,67 @@ async function loadProxy(target) {
     const resp = await fetch(proxyUrl, {
       signal: controller.signal,
       headers: {
-        'User-Agent': settings.userAgent === 'random' ? getRandomUserAgent() : USER_AGENTS[settings.userAgent] || getRandomUserAgent(),
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9'
+        'User-Agent': settings.userAgent === 'random' ? getRandomUserAgent() : USER_AGENTS[settings.userAgent]
       }
     });
+    
     clearTimeout(timeoutId);
     
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    let html = await resp.text();
-    const contentType = resp.headers.get('content-type') || '';
-    if (contentType.includes('text/html')) {
-      html = rewriteHtml(html, target);
+    if (!resp.ok) {
+      throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
     }
-
-    cache.set(target, { html, time: Date.now() });
-    state.cacheSize = Array.from(cache.values()).reduce((sum, item) => sum + new Blob([item.html]).size, 0);
-
+    
+    let html = await resp.text();
+    html = rewriteHtml(html, target);
+    
+    const elapsedTime = Math.round(performance.now() - startTime);
+    state.totalTime += elapsedTime;
+    state.avgTime = Math.round(state.totalTime / ++state.requests);
+    
     const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
-    iframe.src = URL.createObjectURL(blob);
-
-    const elapsed = Math.round(performance.now() - startTime);
-    state.totalTime += elapsed;
-    state.requests++;
-    state.avgTime = state.requests ? Math.round(state.totalTime / state.requests) : 0;
-    updateStats();
-    addLog(`✓ Loaded: ${target} (${elapsed}ms)`, 'success');
-    feedback.textContent = `Loaded in ${elapsed}ms ✓`;
+    const url = URL.createObjectURL(blob);
+    iframe.src = url;
+    
+    cache.set(target, { html, time: now });
+    state.cacheSize += html.length;
+    
+    feedback.textContent = `✓ Loaded in ${elapsedTime}ms`;
     feedback.className = 'valid';
+    
+    addLog(`✓ ${target} (${elapsedTime}ms)`, 'success');
+    updateStats();
+    
   } catch (err) {
-    const elapsed = Math.round(performance.now() - startTime);
-    const errorMsg = err.name === 'AbortError' ? 'Request timeout' : err.message;
-    feedback.textContent = `✗ Failed: ${errorMsg}`;
+    addLog(`✗ Failed: ${err.message}`, 'error');
+    feedback.textContent = `✗ Error: ${err.message}`;
     feedback.className = 'error';
-    addLog(`✗ Error loading ${target}: ${errorMsg} (${elapsed}ms)`, 'error');
     state.blocked++;
     updateStats();
+  } finally {
+    loadingOverlay.style.display = 'none';
   }
-  loadingOverlay.style.display = 'none';
 }
 
 // ---------- EVENT LISTENERS ----------
 goBtn.addEventListener('click', () => {
-  const input = urlInput.value.trim();
-  if (!input) {
-    feedback.textContent = 'Please enter a URL or search query';
+  const target = urlInput.value.trim();
+  if (!target) {
+    feedback.textContent = '⚠ Please enter a URL or search query';
     feedback.className = 'error';
     return;
   }
   
-  if (isValidURL(input)) {
-    loadProxy(input);
-  } else if (isSearchQuery(input)) {
-    performSearch(input);
+  if (isSearchQuery(target)) {
+    performSearch(target);
+  } else if (isValidURL(target)) {
+    loadProxy(target);
   } else {
-    feedback.textContent = '✗ Invalid URL or search query';
-    feedback.className = 'error';
+    const guess = (target.includes('.') ? 'https://' : 'https://www.') + target;
+    if (isValidURL(guess)) {
+      loadProxy(guess);
+    } else {
+      performSearch(target);
+    }
   }
 });
 
@@ -1065,6 +1161,7 @@ toggleAdvanced.addEventListener('change', () => {
   advancedPanel.classList.toggle('show');
 });
 
+// Filter logs
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -1073,7 +1170,7 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     
     document.querySelectorAll('.log-entry').forEach(entry => {
       if (state.currentFilter === 'all' || entry.dataset.level === state.currentFilter) {
-        entry.style.display = 'block';
+        entry.style.display = '';
       } else {
         entry.style.display = 'none';
       }
@@ -1081,7 +1178,8 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   });
 });
 
-document.getElementById('applySettings').addEventListener('click', () => {
+// Settings
+document.getElementById('applySettings')?.addEventListener('click', () => {
   settings.rateLimit = parseInt(document.getElementById('rateLimit').value);
   settings.cacheTtl = parseInt(document.getElementById('cacheTtl').value);
   settings.requestTimeout = parseInt(document.getElementById('requestTimeout').value);
@@ -1090,31 +1188,34 @@ document.getElementById('applySettings').addEventListener('click', () => {
   settings.proxyApi = document.getElementById('proxyApi').value;
   settings.linkRewrite = document.getElementById('linkRewrite').value;
   settings.searchEngine = document.getElementById('searchEngine').value;
-  addLog('✓ Settings applied', 'success');
+  
+  addLog('⚙️ Settings applied', 'info');
+  feedback.textContent = '✓ Settings saved!';
+  feedback.className = 'valid';
 });
 
-document.getElementById('clearCache').addEventListener('click', () => {
+document.getElementById('clearCache')?.addEventListener('click', () => {
   cache.clear();
   state.cacheSize = 0;
   updateStats();
-  addLog('🗑️ Cache cleared', 'info');
+  addLog('🗑️ Cache cleared', 'warn');
+  feedback.textContent = '✓ Cache cleared!';
+  feedback.className = 'valid';
 });
 
-document.getElementById('downloadPage').addEventListener('click', () => {
-  if (!iframe.src) {
-    addLog('⚠ No page loaded', 'warn');
-    return;
+document.getElementById('downloadPage')?.addEventListener('click', () => {
+  if (iframe.src) {
+    const link = document.createElement('a');
+    link.href = iframe.src;
+    link.download = `page_${Date.now()}.html`;
+    link.click();
+    addLog('⬇️ Page downloaded', 'success');
   }
-  
-  const link = document.createElement('a');
-  link.href = iframe.src;
-  link.download = 'page.html';
-  link.click();
-  addLog('⬇️ Download started', 'success');
 });
 
 // Initialize
 updateStats();
 </script>
+
 </body>
 </html>
