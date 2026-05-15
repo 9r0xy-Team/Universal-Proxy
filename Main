@@ -488,6 +488,48 @@ iframe {
   border-color: transparent;
   color: #fff;
 }
+
+.search-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.search-result-card {
+  background: rgba(26, 15, 46, 0.6);
+  border: 1px solid rgba(200, 132, 252, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.search-result-card:hover {
+  border-color: #f87171;
+  background: rgba(26, 15, 46, 0.8);
+  transform: translateY(-2px);
+}
+
+.search-result-card h3 {
+  color: #c084fc;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  word-break: break-word;
+}
+
+.search-result-card p {
+  color: #b8a8d1;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.search-result-card .url {
+  color: #86efac;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  word-break: break-all;
+}
 </style>
 </head>
 <body>
@@ -505,9 +547,9 @@ iframe {
 <div class="container">
   <!-- Main input -->
   <div class="card">
-    <div class="card-title">🌐 Enter any URL</div>
+    <div class="card-title">🌐 Enter URL or Search Query</div>
     <div class="input-group">
-      <input type="text" id="urlInput" placeholder="https://example.com" autocomplete="off">
+      <input type="text" id="urlInput" placeholder="https://example.com or search term" autocomplete="off">
       <button id="goBtn">Go</button>
     </div>
     <div id="feedback"></div>
@@ -524,15 +566,15 @@ iframe {
     <div class="settings-grid">
       <div class="setting-item">
         <label>Rate limit (req/min)</label>
-        <input type="number" id="rateLimit" value="30" min="1" max="300">
+        <input type="number" id="rateLimit" value="60" min="1" max="300">
       </div>
       <div class="setting-item">
         <label>Cache TTL (seconds)</label>
-        <input type="number" id="cacheTtl" value="60" min="0" max="1200">
+        <input type="number" id="cacheTtl" value="120" min="0" max="1200">
       </div>
       <div class="setting-item">
         <label>Request timeout (ms)</label>
-        <input type="number" id="requestTimeout" value="15000" min="1000" max="60000">
+        <input type="number" id="requestTimeout" value="20000" min="1000" max="60000">
       </div>
       <div class="setting-item">
         <label>Auto-retry on fail</label>
@@ -552,11 +594,13 @@ iframe {
         </select>
       </div>
       <div class="setting-item">
-        <label>Proxy API</label>
+        <label>Primary Proxy API</label>
         <select id="proxyApi">
           <option value="allorigins">api.allorigins.win</option>
           <option value="corsproxy">corsproxy.io</option>
           <option value="thingproxy">thingproxy.freeboard.io</option>
+          <option value="jsdelivr">jsDelivr CDN</option>
+          <option value="staticaly">Staticaly</option>
         </select>
       </div>
       <div class="setting-item">
@@ -568,10 +612,12 @@ iframe {
         </select>
       </div>
       <div class="setting-item">
-        <label>Weebly-only mode</label>
-        <select id="weeblyOnly">
-          <option value="no">No (all URLs)</option>
-          <option value="yes">Yes (trusted only)</option>
+        <label>Search engine</label>
+        <select id="searchEngine">
+          <option value="google">Google</option>
+          <option value="bing">Bing</option>
+          <option value="ddg">DuckDuckGo</option>
+          <option value="ecosia">Ecosia</option>
         </select>
       </div>
       <div class="setting-item" style="grid-column: span 2; display: flex; gap: 0.5rem;">
@@ -608,6 +654,12 @@ iframe {
     <div class="logs-box" id="logsContainer"><div class="log-entry info">[SYSTEM] Universal Proxy Advanced loaded</div></div>
   </div>
 
+  <!-- Search Results -->
+  <div class="card hidden-panel" id="searchResultsPanel">
+    <div class="card-title">🔎 Search Results</div>
+    <div id="searchResults" class="search-results"></div>
+  </div>
+
   <!-- Iframe -->
   <div class="card">
     <div class="card-title">🔍 Live Preview</div>
@@ -616,12 +668,12 @@ iframe {
         <div class="spinner"></div>
         <span>Loading site…</span>
       </div>
-      <iframe id="proxyFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+      <iframe id="proxyFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock"></iframe>
     </div>
   </div>
 </div>
 
-<div class="footer">Universal Proxy Advanced v4.0 · Premium proxy for any URL · Enhanced performance & security</div>
+<div class="footer">Universal Proxy Advanced v5.0 · Premium proxy with search support · Enhanced for all sites</div>
 
 <script>
 // ---------- ADVANCED STATE ----------
@@ -638,22 +690,30 @@ const state = {
 };
 
 let settings = {
-  rateLimit: 30,
-  cacheTtl: 60,
-  requestTimeout: 15000,
+  rateLimit: 60,
+  cacheTtl: 120,
+  requestTimeout: 20000,
   userAgent: 'random',
   weeblyOnly: false,
   proxyApi: 'allorigins',
   autoRetry: true,
-  linkRewrite: 'auto'
+  linkRewrite: 'auto',
+  searchEngine: 'google'
 };
 
 const cache = new Map();
 const USER_AGENTS = {
-  chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  firefox: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
-  safari: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
-  edge: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0'
+  chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+  firefox: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0',
+  safari: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+  edge: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0'
+};
+
+const SEARCH_ENGINES = {
+  google: 'https://www.google.com/search?q=',
+  bing: 'https://www.bing.com/search?q=',
+  ddg: 'https://duckduckgo.com/?q=',
+  ecosia: 'https://www.ecosia.org/search?q='
 };
 
 // DOM refs
@@ -666,6 +726,8 @@ const logsContainer = document.getElementById('logsContainer');
 const advancedPanel = document.getElementById('advancedPanel');
 const toggleAdvanced = document.getElementById('toggleAdvanced');
 const throttleIndicator = document.getElementById('throttleIndicator');
+const searchResultsPanel = document.getElementById('searchResultsPanel');
+const searchResults = document.getElementById('searchResults');
 
 const statRequests = document.getElementById('statRequests');
 const statCache = document.getElementById('statCache');
@@ -701,7 +763,6 @@ function updateStats() {
   statUptime.textContent = state.uptime + '%';
   statCacheSize.textContent = (state.cacheSize / 1024).toFixed(1) + 'KB';
   
-  // Update throttle indicator
   const throttled = state.timestamps.filter(t => Date.now() - t < 60000).length >= settings.rateLimit * 0.8;
   throttleIndicator.className = `throttle-indicator ${throttled ? 'throttled' : 'active'}`;
 }
@@ -715,6 +776,10 @@ function isValidURL(s) {
   }
 }
 
+function isSearchQuery(s) {
+  return !s.includes('.') && !s.includes('://') && s.trim().length > 0;
+}
+
 function getRandomUserAgent() {
   const agents = Object.values(USER_AGENTS);
   return agents[Math.floor(Math.random() * agents.length)];
@@ -723,38 +788,131 @@ function getRandomUserAgent() {
 function buildProxyUrl(target) {
   const api = settings.proxyApi;
   let base = '';
-  if (api === 'allorigins') base = 'https://api.allorigins.win/raw?url=';
-  else if (api === 'corsproxy') base = 'https://corsproxy.io/?' + encodeURIComponent(target);
-  else if (api === 'thingproxy') base = 'https://thingproxy.freeboard.io/fetch/' + encodeURIComponent(target);
-  else base = 'https://api.allorigins.win/raw?url=';
+  
+  if (api === 'allorigins') {
+    base = 'https://api.allorigins.win/raw?url=';
+  } else if (api === 'corsproxy') {
+    return 'https://corsproxy.io/?url=' + encodeURIComponent(target);
+  } else if (api === 'thingproxy') {
+    return 'https://thingproxy.freeboard.io/fetch/' + encodeURIComponent(target);
+  } else if (api === 'jsdelivr') {
+    return 'https://cdn.jsdelivr.net/gh/jlvandenhout/mirror@main/api/?url=' + encodeURIComponent(target);
+  } else if (api === 'staticaly') {
+    return 'https://cdn.staticaly.com/pages/' + encodeURIComponent(target.replace(/^https?:\/\//, ''));
+  } else {
+    base = 'https://api.allorigins.win/raw?url=';
+  }
+  
   return base + encodeURIComponent(target);
 }
 
 function rewriteHtml(html, baseUrl) {
-  // Remove frame-busting
-  html = html.replace(/<script[^>]*>.*?window\.top\.location.*?<\/script>/gis, '');
+  // Remove frame-busting scripts
+  html = html.replace(/<script[^>]*>[\s\S]*?window\.top\.location[\s\S]*?<\/script>/gi, '');
+  html = html.replace(/<script[^>]*>[\s\S]*?window\.parent[\s\S]*?<\/script>/gi, '');
   html = html.replace(/<meta[^>]*http-equiv=["']refresh["'][^>]*>/gi, '');
   
-  // Advanced link rewriting
+  // Handle now.gg and gaming sites
+  html = html.replace(/<meta[^>]*name=["']viewport["'][^>]*>/gi, '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">');
+  
+  // Rewrite links more aggressively for gaming/interactive sites
   if (settings.linkRewrite !== 'safe') {
-    html = html.replace(/(src|href|action)=(["'])((?:https?:)?\/\/[^"'\s]+|(?:\/[^"'\s]*))\2/gi, (match, attr, quote, url) => {
+    // Rewrite src and href attributes
+    html = html.replace(/(src|href|action)=(["'])((?:https?:)?\/\/[^"'\s]+|(?:\/[^"'\s]*)|data:[^"']+)\2/gi, (match, attr, quote, url) => {
+      if (url.startsWith('data:') || url.startsWith('blob:')) return match;
       let absolute;
       try { 
         absolute = new URL(url, baseUrl).href; 
       } catch { 
         return match; 
       }
-      if (settings.weeblyOnly) {
-        const host = new URL(absolute).hostname;
-        if (!host.endsWith('.weebly.com') && host !== 'weebly.com') return match;
-      }
       const proxied = buildProxyUrl(absolute);
       return `${attr}=${quote}${proxied}${quote}`;
+    });
+    
+    // Rewrite AJAX/XHR calls
+    html = html.replace(/fetch\((["'`])(https?:)?\/\/[^"'`]+\1/g, (match) => {
+      const urlMatch = match.match(/fetch\((["'`])(.*?)\1/);
+      if (!urlMatch) return match;
+      const [, quote, url] = urlMatch;
+      const proxied = buildProxyUrl(url);
+      return `fetch(${quote}${proxied}${quote}`;
     });
   }
 
   html = html.replace(/<form\s/gi, '<form target="_blank" ');
+  
+  // Inject CSP bypass for iframes
+  html = html.replace(/<head>/i, '<head><meta http-equiv="Content-Security-Policy" content="default-src * data: blob:; script-src * \'unsafe-inline\' \'unsafe-eval\'; style-src * \'unsafe-inline\';">');
+  
   return html;
+}
+
+async function performSearch(query) {
+  searchResultsPanel.classList.add('show');
+  searchResults.innerHTML = '<div style="color: #c084fc; text-align: center; padding: 2rem;">Searching...</div>';
+  addLog(`🔎 Searching for: "${query}"`, 'info');
+  
+  try {
+    const searchUrl = SEARCH_ENGINES[settings.searchEngine] + encodeURIComponent(query);
+    const proxyUrl = buildProxyUrl(searchUrl);
+    
+    const resp = await fetch(proxyUrl, {
+      headers: {
+        'User-Agent': settings.userAgent === 'random' ? getRandomUserAgent() : USER_AGENTS[settings.userAgent]
+      }
+    });
+    
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const html = await resp.text();
+    
+    // Parse results from HTML
+    const results = [];
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    
+    // Generic search result parsing
+    const links = doc.querySelectorAll('a[href*="http"]');
+    links.forEach((link, idx) => {
+      if (idx > 15) return;
+      const title = link.textContent.trim();
+      const url = link.href;
+      if (title && url && !url.includes('search')) {
+        results.push({ title, url });
+      }
+    });
+    
+    displaySearchResults(results);
+    addLog(`✓ Found ${results.length} results for "${query}"`, 'success');
+  } catch (err) {
+    searchResults.innerHTML = `<div style="color: #f87171; text-align: center; padding: 2rem;">❌ Search failed: ${err.message}</div>`;
+    addLog(`✗ Search error: ${err.message}`, 'error');
+  }
+}
+
+function displaySearchResults(results) {
+  searchResults.innerHTML = '';
+  
+  if (results.length === 0) {
+    searchResults.innerHTML = '<div style="color: #b8a8d1; text-align: center; padding: 2rem;">No results found</div>';
+    return;
+  }
+  
+  results.forEach(result => {
+    const card = document.createElement('div');
+    card.className = 'search-result-card';
+    card.innerHTML = `
+      <h3>${result.title || 'Untitled'}</h3>
+      <p>${result.description || 'No description available'}</p>
+      <div class="url">${result.url}</div>
+    `;
+    card.addEventListener('click', () => {
+      urlInput.value = result.url;
+      loadProxy(result.url);
+      searchResultsPanel.classList.remove('show');
+    });
+    searchResults.appendChild(card);
+  });
 }
 
 // ---------- CORE PROXY FUNCTION ----------
@@ -779,17 +937,19 @@ async function loadProxy(target) {
     state.cacheHits++;
     updateStats();
     addLog(`✓ Cache hit: ${target}`, 'success');
-    const blob = new Blob([cached.html], { type: 'text/html' });
+    const blob = new Blob([cached.html], { type: 'text/html; charset=utf-8' });
     iframe.src = URL.createObjectURL(blob);
     loadingOverlay.style.display = 'none';
     feedback.textContent = 'Loaded from cache ✓';
     feedback.className = 'valid';
+    searchResultsPanel.classList.remove('show');
     return;
   }
 
   loadingOverlay.style.display = 'flex';
   feedback.textContent = 'Fetching…';
   feedback.className = 'info';
+  searchResultsPanel.classList.remove('show');
   const startTime = performance.now();
 
   try {
@@ -800,7 +960,9 @@ async function loadProxy(target) {
     const resp = await fetch(proxyUrl, {
       signal: controller.signal,
       headers: {
-        'User-Agent': settings.userAgent === 'random' ? getRandomUserAgent() : USER_AGENTS[settings.userAgent] || getRandomUserAgent()
+        'User-Agent': settings.userAgent === 'random' ? getRandomUserAgent() : USER_AGENTS[settings.userAgent] || getRandomUserAgent(),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9'
       }
     });
     clearTimeout(timeoutId);
@@ -815,7 +977,7 @@ async function loadProxy(target) {
     cache.set(target, { html, time: Date.now() });
     state.cacheSize = Array.from(cache.values()).reduce((sum, item) => sum + new Blob([item.html]).size, 0);
 
-    const blob = new Blob([html], { type: 'text/html' });
+    const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
     iframe.src = URL.createObjectURL(blob);
 
     const elapsed = Math.round(performance.now() - startTime);
@@ -835,12 +997,16 @@ async function loadProxy(target) {
     state.blocked++;
     updateStats();
     
-    // Auto-retry
-    if (settings.autoRetry && settings.proxyApi !== 'thingproxy') {
-      const fallback = settings.proxyApi === 'allorigins' ? 'corsproxy' : 'thingproxy';
-      addLog(`↻ Retrying with fallback: ${fallback}`, 'warn');
-      settings.proxyApi = fallback;
-      setTimeout(() => loadProxy(target), 500);
+    // Auto-retry with different API
+    if (settings.autoRetry) {
+      const apis = ['allorigins', 'corsproxy', 'jsdelivr', 'thingproxy'];
+      const currentIdx = apis.indexOf(settings.proxyApi);
+      const fallback = apis[(currentIdx + 1) % apis.length];
+      if (fallback !== settings.proxyApi) {
+        addLog(`↻ Retrying with fallback: ${fallback}`, 'warn');
+        settings.proxyApi = fallback;
+        setTimeout(() => loadProxy(target), 800);
+      }
     }
   } finally {
     loadingOverlay.style.display = 'none';
@@ -856,14 +1022,14 @@ urlInput.addEventListener('input', () => {
     goBtn.disabled = true;
     return;
   }
-  if (isValidURL(val)) {
-    feedback.textContent = '✓ Valid URL';
+  if (isValidURL(val) || isSearchQuery(val)) {
+    feedback.textContent = isValidURL(val) ? '✓ Valid URL' : '🔎 Search query';
     feedback.className = 'valid';
     urlInput.classList.add('valid'); 
     urlInput.classList.remove('invalid');
     goBtn.disabled = false;
   } else {
-    feedback.textContent = '✗ Invalid URL (needs http:// or https://)';
+    feedback.textContent = '✗ Invalid input';
     feedback.className = 'error';
     urlInput.classList.add('invalid'); 
     urlInput.classList.remove('valid');
@@ -873,9 +1039,14 @@ urlInput.addEventListener('input', () => {
 
 goBtn.addEventListener('click', () => {
   const target = urlInput.value.trim();
-  if (!isValidURL(target)) return;
-  iframe.src = 'about:blank';
-  setTimeout(() => loadProxy(target), 100);
+  if (!target) return;
+  
+  if (isValidURL(target)) {
+    iframe.src = 'about:blank';
+    setTimeout(() => loadProxy(target), 100);
+  } else if (isSearchQuery(target)) {
+    performSearch(target);
+  }
 });
 
 urlInput.addEventListener('keydown', e => { 
@@ -906,15 +1077,15 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 
 // Settings
 document.getElementById('applySettings').addEventListener('click', () => {
-  settings.rateLimit = parseInt(document.getElementById('rateLimit').value) || 30;
-  settings.cacheTtl = parseInt(document.getElementById('cacheTtl').value) || 60;
-  settings.requestTimeout = parseInt(document.getElementById('requestTimeout').value) || 15000;
+  settings.rateLimit = parseInt(document.getElementById('rateLimit').value) || 60;
+  settings.cacheTtl = parseInt(document.getElementById('cacheTtl').value) || 120;
+  settings.requestTimeout = parseInt(document.getElementById('requestTimeout').value) || 20000;
   settings.userAgent = document.getElementById('userAgent').value;
-  settings.weeblyOnly = document.getElementById('weeblyOnly').value === 'yes';
   settings.proxyApi = document.getElementById('proxyApi').value;
   settings.autoRetry = document.getElementById('autoRetry').value === 'true';
   settings.linkRewrite = document.getElementById('linkRewrite').value;
-  addLog(`⚙️ Settings updated: rate=${settings.rateLimit}, cache=${settings.cacheTtl}s, timeout=${settings.requestTimeout}ms`, 'warn');
+  settings.searchEngine = document.getElementById('searchEngine').value;
+  addLog(`⚙️ Settings updated: rate=${settings.rateLimit}, cache=${settings.cacheTtl}s, api=${settings.proxyApi}`, 'warn');
 });
 
 document.getElementById('clearCache').addEventListener('click', () => {
@@ -936,7 +1107,7 @@ document.getElementById('downloadPage').addEventListener('click', () => {
     addLog('⚠ Page not in cache, reload first', 'error'); 
     return; 
   }
-  const blob = new Blob([cached.html], { type: 'text/html' });
+  const blob = new Blob([cached.html], { type: 'text/html; charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'proxied-page.html';
@@ -947,9 +1118,10 @@ document.getElementById('downloadPage').addEventListener('click', () => {
 
 // Initialize
 iframe.src = 'about:blank';
-const defaultUrl = 'https://google.com';
+const defaultUrl = 'https://www.google.com';
 urlInput.value = defaultUrl;
-addLog('🚀 Universal Proxy Advanced ready – Enhanced features enabled', 'info');
+addLog('🚀 Universal Proxy v5.0 – Search & multi-site support enabled', 'info');
+addLog('✓ Supports: now.gg, gaming sites, search engines, and more', 'info');
 setTimeout(() => loadProxy(defaultUrl), 500);
 </script>
 </body>
