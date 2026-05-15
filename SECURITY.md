@@ -2,8 +2,7 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+⚠This project is heavily guarded and shall not be copied unless with consent⚠
 
 | Version | Supported          |
 | ------- | ------------------ |
@@ -14,8 +13,8 @@ currently being supported with security updates.
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+if a copy comes out, please let me know so that i can talk
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+You can go to the atomic mail here:
+mltpl@atomicmail.io
+
