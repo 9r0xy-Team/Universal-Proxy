@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Universal Proxy · StrongGuardian+</title>
+<title>Universal Proxy · Universal Proxy</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -343,7 +343,7 @@ iframe {
 
 <div class="container" role="main" aria-label="Proxy Interface">
   <!-- Main input -->
-  <section class="card" aria-labelledby="input-title">
+    <section class="card" aria-labelledby="input-title">
     <h2 id="input-title" class="card-title">🌐 Enter any URL</h2>
     <div class="input-group">
       <input type="url" id="urlInput" placeholder="https://google.com" autocomplete="off" aria-describedby="feedback" aria-required="true" />
@@ -432,7 +432,7 @@ iframe {
   </section>
 </div>
 
-<footer class="footer" role="contentinfo">Universal Proxy · StrongGuardian+ v3.0 · Works with any URL</footer>
+<footer class="footer" role="contentinfo">Universal Proxy · Universal Proxy v3.0 · Works with any URL</footer>
 
 <script>
 const state = {

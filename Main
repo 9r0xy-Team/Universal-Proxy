@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>StrongGuardian+ · Universal Proxy</title>
+<title>Universal Proxy · Universal Proxy</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -99,7 +99,7 @@ iframe { width: 100%; height: 100%; border: none; }
 <body>
 
 <header>
-  <h1><span>🛡️</span> StrongGuardian+</h1>
+  <h1><span>🛡️</span> Universal Proxy</h1>
   <nav>
     <a href="#">Dashboard</a>
     <a href="#">Logs</a>
@@ -181,7 +181,7 @@ iframe { width: 100%; height: 100%; border: none; }
   <!-- Logs -->
   <div class="card">
     <div class="card-title">📜 Request Log <span style="font-size:0.7rem;color:#6b7280;">(last 100)</span></div>
-    <div class="logs-box" id="logsContainer"><div class="log-entry">[INFO] StrongGuardian+ started</div></div>
+    <div class="logs-box" id="logsContainer"><div class="log-entry">[INFO] Universal Proxy started</div></div>
   </div>
 
   <!-- Iframe -->
@@ -197,7 +197,7 @@ iframe { width: 100%; height: 100%; border: none; }
   </div>
 </div>
 
-<div class="footer">StrongGuardian+ v3.0 · Universal proxy · Works with any URL</div>
+<div class="footer">Universal Proxy v3.0 · Universal proxy · Works with any URL</div>
 
 <script>
 // ---------- STATE ----------
@@ -442,7 +442,7 @@ document.getElementById('downloadPage').addEventListener('click', () => {
 iframe.src = 'about:blank';
 const defaultUrl = 'https://google.com';
 urlInput.value = defaultUrl;
-addLog('StrongGuardian+ ready – loading Google by default', 'info');
+addLog('Universal Proxy ready – loading Google by default', 'info');
 setTimeout(() => loadProxy(defaultUrl), 300);
 </script>
 </body>
