@@ -25,4 +25,4 @@ T: This code is intended as a learning tool and not a real proxy. It was created
 
 L:Last thing I say, I have this code licensed from Github, and the CC will be down.
 
-<img src="https://lh3.googleusercontent.com/sitesv/AA5AbUDzGBtOkZuk20IQz6rqed8KjtvctJUz-LJvdUmhfOCAI-qpGvN84YWuu0iVUMpDBVhL_fLLFtG8DlBt9VmCA2kAsvvekCJqXQ5LcdOeSjg_F79h8nUvDoVcQkj9FW8iw_igegnjRJ2AqoI11RzI3Sq-umqJQODL38GB9muNgQKwYWelEl7rlmo1c8s=w1280"/>
+<img width="362" height="360" alt="image" src="https://github.com/user-attachments/assets/31424a7e-27cc-4eaa-8e1d-079b7b2f2b4e" />
