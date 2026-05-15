@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>StrongGuardian+ · Universal Proxy</title>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+</head>
+<body>
+  <header>
+    <h1><span>🛡️</span> StrongGuardian+</h1>
+    <nav aria-label="main">
+      <a href="#">Dashboard</a>
+      <a href="#">Logs</a>
+      <a href="#">Pro Tools</a>
+    </nav>
+  </header>
+
+  <main class="container" role="main">
+    <section class="card">
+      <h2 class="card-title">🌐 Enter any URL</h2>
+      <div class="input-group">
+        <input id="urlInput" type="url" placeholder="https://example.com" aria-describedby="feedback" />
+        <button id="goBtn" disabled>Go</button>
+        <button id="openNew" title="Open in new tab">Open</button>
+      </div>
+      <div id="feedback" role="status"></div>
+    </section>
+
+    <section class="card">
+      <h3 class="card-title">⚙️ Settings</h3>
+      <div class="controls">
+        <label for="rateLimit">Rate/min</label>
+        <input id="rateLimit" type="number" min="1" max="600" value="20" />
+        <label for="cacheTtl">Cache (s)</label>
+        <input id="cacheTtl" type="number" min="0" max="3600" value="30" />
+        <select id="proxyApi">
+          <option value="allorigins">api.allorigins.win</option>
+          <option value="corsproxy">corsproxy.io</option>
+          <option value="thingproxy">thingproxy.freeboard.io</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="card">
+      <h4 class="card-title">📊 Stats</h4>
+      <div class="stat-row">
+        <div class="stat"><div id="statRequests">0</div><div class="small">Requests</div></div>
+        <div class="stat"><div id="statCache">0</div><div class="small">Cache</div></div>
+        <div class="stat"><div id="statBlocked">0</div><div class="small">Blocked</div></div>
+        <div class="stat"><div id="statAvg">0ms</div><div class="small">Avg</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h4 class="card-title">📜 Logs</h4>
+      <div id="logs" class="logs-box" aria-live="polite"></div>
+    </section>
+
+    <section class="card">
+      <h4 class="card-title">🔍 Preview</h4>
+      <div class="iframe-wrapper">
+        <div id="loading" class="loading" hidden>Loading…</div>
+        <iframe id="proxyFrame" sandbox="allow-scripts allow-forms allow-popups" title="Proxied preview"></iframe>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">StrongGuardian+ · Universal Proxy</footer>
+
+  <script src="/assets/js/lruCache.js"></script>
+  <script src="/assets/js/htmlRewriter.js"></script>
+  <script src="/assets/js/proxyController.js"></script>
+  <script src="/assets/js/app.js"></script>
+</body>
+</html>
