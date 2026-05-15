@@ -42,6 +42,7 @@ body.cloaked button {
   justify-content: center;
   font-size: 1.2rem;
   color: #333;
+  font-family: 'Segoe UI', Arial, sans-serif;
 }
 
 .cloak-overlay.active {
@@ -53,14 +54,25 @@ body.cloaked button {
   top: 0;
   left: 0;
   right: 0;
-  height: 40px;
+  height: 30px;
   background: #f0f0f0;
   border-bottom: 1px solid #ddd;
   display: flex;
   align-items: center;
   padding: 0 10px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #333;
+  font-family: Segoe UI, sans-serif;
+}
+
+.cloak-overlay .content {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.cloak-overlay p {
+  margin: 10px 0;
+  font-size: 1rem;
 }
 
 .cloak-exit-key {
@@ -361,8 +373,7 @@ nav a:hover::after {
   box-shadow: 0 0 10px rgba(248, 113, 113, 0.3);
 }
 
-.setting-item button, 
-.setting-item .action-btn {
+.setting-item button { 
   padding: 0.7rem 1rem; 
   background: linear-gradient(135deg, #c084fc, #f87171); 
   color: #fff; 
@@ -374,8 +385,7 @@ nav a:hover::after {
   font-size: 0.85rem;
 }
 
-.setting-item button:hover,
-.setting-item .action-btn:hover { 
+.setting-item button:hover { 
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(248, 113, 113, 0.4);
 }
@@ -573,55 +583,13 @@ iframe {
   border-color: transparent;
   color: #fff;
 }
-
-.search-results {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.search-result-card {
-  background: rgba(26, 15, 46, 0.6);
-  border: 1px solid rgba(200, 132, 252, 0.2);
-  border-radius: 8px;
-  padding: 1rem;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.search-result-card:hover {
-  border-color: #f87171;
-  background: rgba(26, 15, 46, 0.8);
-  transform: translateY(-2px);
-}
-
-.search-result-card h3 {
-  color: #c084fc;
-  font-size: 0.95rem;
-  margin-bottom: 0.5rem;
-  word-break: break-word;
-}
-
-.search-result-card p {
-  color: #b8a8d1;
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
-
-.search-result-card .url {
-  color: #86efac;
-  font-size: 0.75rem;
-  margin-top: 0.5rem;
-  word-break: break-all;
-}
 </style>
 </head>
 <body>
 
 <div class="cloak-overlay" id="cloakOverlay">
   <div class="title-bar">about:blank</div>
-  <div style="text-align: center;">
+  <div class="content">
     <p>The page cannot be displayed</p>
     <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">Make sure the web address is correct.</p>
   </div>
@@ -640,7 +608,6 @@ iframe {
 </header>
 
 <div class="container">
-  <!-- Main input -->
   <div class="card">
     <div class="card-title">🌐 Enter URL or Search Query</div>
     <div class="input-group">
@@ -655,27 +622,24 @@ iframe {
     </div>
   </div>
 
-  <!-- Advanced panel (hidden) -->
   <div class="card hidden-panel" id="advancedPanel">
     <div class="card-title">⚡ Advanced Settings</div>
     <div class="settings-grid">
       <div class="setting-item">
-        <label>Rate limit (req/min)</label>
-        <input type="number" id="rateLimit" value="60" min="1" max="300">
+        <label>Proxy Method</label>
+        <select id="proxyMethod">
+          <option value="iframe">iFrame (Default)</option>
+          <option value="fetch">Fetch API</option>
+          <option value="google-embed">Google Embed</option>
+        </select>
       </div>
       <div class="setting-item">
-        <label>Cache TTL (seconds)</label>
-        <input type="number" id="cacheTtl" value="120" min="0" max="1200">
-      </div>
-      <div class="setting-item">
-        <label>Request timeout (ms)</label>
-        <input type="number" id="requestTimeout" value="20000" min="1000" max="60000">
-      </div>
-      <div class="setting-item">
-        <label>Auto-retry on fail</label>
-        <select id="autoRetry">
-          <option value="true">Enabled</option>
-          <option value="false">Disabled</option>
+        <label>Primary Proxy API</label>
+        <select id="proxyApi">
+          <option value="allorigins">api.allorigins.win</option>
+          <option value="corsproxy">corsproxy.io</option>
+          <option value="thingproxy">thingproxy.freeboard.io</option>
+          <option value="cors-anywhere">cors-anywhere</option>
         </select>
       </div>
       <div class="setting-item">
@@ -689,73 +653,34 @@ iframe {
         </select>
       </div>
       <div class="setting-item">
-        <label>Primary Proxy API</label>
-        <select id="proxyApi">
-          <option value="allorigins">api.allorigins.win</option>
-          <option value="corsproxy">corsproxy.io</option>
-          <option value="thingproxy">thingproxy.freeboard.io</option>
-          <option value="jsdelivr">jsDelivr CDN</option>
-          <option value="staticaly">Staticaly</option>
-        </select>
-      </div>
-      <div class="setting-item">
         <label>Link rewriting</label>
         <select id="linkRewrite">
-          <option value="auto">Auto</option>
           <option value="aggressive">Aggressive</option>
+          <option value="auto">Auto</option>
           <option value="safe">Safe</option>
-        </select>
-      </div>
-      <div class="setting-item">
-        <label>Search engine</label>
-        <select id="searchEngine">
-          <option value="google">Google</option>
-          <option value="bing">Bing</option>
-          <option value="ddg">DuckDuckGo</option>
-          <option value="ecosia">Ecosia</option>
         </select>
       </div>
       <div class="setting-item" style="grid-column: span 2; display: flex; gap: 0.5rem;">
         <button id="applySettings">Apply</button>
         <button id="clearCache">Clear Cache</button>
-        <button id="downloadPage">Download Page</button>
       </div>
     </div>
   </div>
 
-  <!-- Stats -->
   <div class="card">
     <div class="card-title">📊 Live Performance Metrics</div>
     <div class="stats-row">
       <div class="stat-item"><div class="value" id="statRequests">0</div><div class="label">Requests</div></div>
       <div class="stat-item"><div class="value" id="statCache">0</div><div class="label">Cache Hits</div></div>
-      <div class="stat-item"><div class="value" id="statBlocked">0</div><div class="label">Blocked</div></div>
       <div class="stat-item"><div class="value" id="statSpeed">0ms</div><div class="label">Avg Latency</div></div>
-      <div class="stat-item"><div class="value" id="statUptime">100%</div><div class="label">Uptime</div></div>
-      <div class="stat-item"><div class="value" id="statCacheSize">0KB</div><div class="label">Cache Size</div></div>
     </div>
   </div>
 
-  <!-- Request Log -->
   <div class="card">
-    <div class="card-title">📜 Request Log <span class="badge">Live</span> <span style="font-size:0.7rem;color:#b8a8d1;">(last 150)</span></div>
-    <div class="filter-controls">
-      <button class="filter-btn active" data-filter="all">All</button>
-      <button class="filter-btn" data-filter="info">Info</button>
-      <button class="filter-btn" data-filter="success">Success</button>
-      <button class="filter-btn" data-filter="warn">Warnings</button>
-      <button class="filter-btn" data-filter="error">Errors</button>
-    </div>
+    <div class="card-title">📜 Live Log</div>
     <div class="logs-box" id="logsContainer"><div class="log-entry info">[SYSTEM] Universal Proxy Advanced loaded</div></div>
   </div>
 
-  <!-- Search Results -->
-  <div class="card hidden-panel" id="searchResultsPanel">
-    <div class="card-title">🔎 Search Results</div>
-    <div id="searchResults" class="search-results"></div>
-  </div>
-
-  <!-- Iframe -->
   <div class="card">
     <div class="card-title">🔍 Live Preview</div>
     <div class="iframe-wrapper">
@@ -763,53 +688,38 @@ iframe {
         <div class="spinner"></div>
         <span>Loading site…</span>
       </div>
-      <iframe id="proxyFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock"></iframe>
+      <iframe id="proxyFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-presentation"></iframe>
     </div>
   </div>
 </div>
 
-<div class="footer">Universal Proxy Advanced v5.1 · Premium proxy with stealth cloaking · Enhanced for all sites</div>
+<div class="footer">Universal Proxy Advanced v6.0 · Universal site compatibility · Google Embed & about:blank support</div>
 
 <script>
-// ---------- ADVANCED STATE ----------
+// ---------- UNIVERSAL PROXY STATE ----------
 const state = {
   requests: 0,
   cacheHits: 0,
-  blocked: 0,
   totalTime: 0,
   avgTime: 0,
   timestamps: [],
-  uptime: 100,
-  cacheSize: 0,
-  currentFilter: 'all',
-  isCloaked: false
+  isCloaked: false,
+  currentUrl: null
 };
 
 let settings = {
-  rateLimit: 60,
-  cacheTtl: 120,
-  requestTimeout: 20000,
-  userAgent: 'random',
-  weeblyOnly: false,
+  proxyMethod: 'iframe',
   proxyApi: 'allorigins',
-  autoRetry: true,
-  linkRewrite: 'auto',
-  searchEngine: 'google'
+  userAgent: 'random',
+  linkRewrite: 'aggressive'
 };
 
 const cache = new Map();
 const USER_AGENTS = {
-  chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+  chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0.0.0 Safari/537.36',
   firefox: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0',
-  safari: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
-  edge: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0'
-};
-
-const SEARCH_ENGINES = {
-  google: 'https://www.google.com/search?q=',
-  bing: 'https://www.bing.com/search?q=',
-  ddg: 'https://duckduckgo.com/?q=',
-  ecosia: 'https://www.ecosia.org/search?q='
+  safari: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/17.2 Safari/605.1.15',
+  edge: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Edg/121.0.0.0'
 };
 
 // DOM refs
@@ -819,45 +729,34 @@ const feedback = document.getElementById('feedback');
 const iframe = document.getElementById('proxyFrame');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const logsContainer = document.getElementById('logsContainer');
-const advancedPanel = document.getElementById('advancedPanel');
-const toggleAdvanced = document.getElementById('toggleAdvanced');
-const throttleIndicator = document.getElementById('throttleIndicator');
-const searchResultsPanel = document.getElementById('searchResultsPanel');
-const searchResults = document.getElementById('searchResults');
 const cloakBtn = document.getElementById('cloakBtn');
 const cloakOverlay = document.getElementById('cloakOverlay');
-
 const statRequests = document.getElementById('statRequests');
 const statCache = document.getElementById('statCache');
-const statBlocked = document.getElementById('statBlocked');
 const statSpeed = document.getElementById('statSpeed');
-const statUptime = document.getElementById('statUptime');
-const statCacheSize = document.getElementById('statCacheSize');
 
-// ---------- CLOAK FUNCTIONALITY (STEALTH MODE) ----------
+// ---------- CLOAK (ABOUT:BLANK) FUNCTIONALITY ----------
 function toggleCloak() {
   state.isCloaked = !state.isCloaked;
   
   if (state.isCloaked) {
-    // Activate cloak overlay
     cloakOverlay.classList.add('active');
     document.body.classList.add('cloaked');
     cloakBtn.textContent = '👁️ Uncloak';
     cloakBtn.classList.add('uncloak');
-    addLog('🔒 Tab cloaked - Press Ctrl+Shift+C to uncloak', 'success');
+    addLog('🔒 Cloaked to about:blank - Press Ctrl+Shift+C to uncloak', 'success');
   } else {
-    // Deactivate cloak
     cloakOverlay.classList.remove('active');
     document.body.classList.remove('cloaked');
     cloakBtn.textContent = '🔒 Cloak Tab';
     cloakBtn.classList.remove('uncloak');
-    addLog('👁️ Tab uncloaked', 'info');
+    addLog('👁️ Uncloaked', 'info');
   }
 }
 
 cloakBtn.addEventListener('click', toggleCloak);
 
-// Keyboard shortcut: Ctrl+Shift+C to toggle cloak
+// Keyboard shortcut: Ctrl+Shift+C
 document.addEventListener('keydown', (e) => {
   if (e.ctrlKey && e.shiftKey && e.code === 'KeyC') {
     e.preventDefault();
@@ -865,18 +764,13 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// ---------- HELPERS ----------
+// ---------- LOGGING ----------
 function addLog(msg, level = 'info') {
-  const colors = {
-    info: '#c084fc',
-    success: '#86efac',
-    warn: '#fbbf24',
-    error: '#f87171'
-  };
+  const colors = { info: '#c084fc', success: '#86efac', warn: '#fbbf24', error: '#f87171' };
   const time = new Date().toLocaleTimeString();
   const entry = document.createElement('div');
   entry.className = `log-entry ${level}`;
-  entry.style.color = colors[level] || colors.info;
+  entry.style.color = colors[level];
   entry.textContent = `[${time}] ${msg}`;
   entry.dataset.level = level;
   logsContainer.appendChild(entry);
@@ -887,28 +781,10 @@ function addLog(msg, level = 'info') {
 function updateStats() {
   statRequests.textContent = state.requests;
   statCache.textContent = state.cacheHits;
-  statBlocked.textContent = state.blocked;
   statSpeed.textContent = state.avgTime + 'ms';
-  statUptime.textContent = state.uptime + '%';
-  statCacheSize.textContent = (state.cacheSize / 1024).toFixed(1) + 'KB';
-  
-  const throttled = state.timestamps.filter(t => Date.now() - t < 60000).length >= settings.rateLimit * 0.8;
-  throttleIndicator.className = `throttle-indicator ${throttled ? 'throttled' : 'active'}`;
 }
 
-function isValidURL(s) {
-  try { 
-    const u = new URL(s); 
-    return u.protocol === 'http:' || u.protocol === 'https:'; 
-  } catch { 
-    return false; 
-  }
-}
-
-function isSearchQuery(s) {
-  return !s.includes('.') && !s.includes('://') && s.trim().length > 0;
-}
-
+// ---------- UNIVERSAL PROXY METHODS ----------
 function getRandomUserAgent() {
   const agents = Object.values(USER_AGENTS);
   return agents[Math.floor(Math.random() * agents.length)];
@@ -916,180 +792,175 @@ function getRandomUserAgent() {
 
 function buildProxyUrl(target) {
   const api = settings.proxyApi;
-  let base = '';
   
   if (api === 'allorigins') {
-    base = 'https://api.allorigins.win/raw?url=';
+    return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(target);
   } else if (api === 'corsproxy') {
     return 'https://corsproxy.io/?url=' + encodeURIComponent(target);
   } else if (api === 'thingproxy') {
     return 'https://thingproxy.freeboard.io/fetch/' + encodeURIComponent(target);
-  } else if (api === 'jsdelivr') {
-    return 'https://cdn.jsdelivr.net/gh/jlvandenhout/mirror@main/api/?url=' + encodeURIComponent(target);
-  } else if (api === 'staticaly') {
-    return 'https://cdn.staticaly.com/pages/' + encodeURIComponent(target.replace(/^https?:\/\//, ''));
-  } else {
-    base = 'https://api.allorigins.win/raw?url=';
+  } else if (api === 'cors-anywhere') {
+    return 'https://cors-anywhere.herokuapp.com/' + target;
   }
-  
-  return base + encodeURIComponent(target);
+  return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(target);
 }
 
+// Universal HTML rewriting - works with ALL sites
 function rewriteHtml(html, baseUrl) {
-  // Remove frame-busting scripts
-  html = html.replace(/<script[^>]*>[\s\S]*?window\.top\.location[\s\S]*?<\/script>/gi, '');
-  html = html.replace(/<script[^>]*>[\s\S]*?window\.parent[\s\S]*?<\/script>/gi, '');
+  // Remove frame-busting code
+  html = html.replace(/<script[^>]*>[\s\S]*?(window\.top|window\.parent|window\.self)[\s\S]*?<\/script>/gi, '');
   html = html.replace(/<meta[^>]*http-equiv=["']refresh["'][^>]*>/gi, '');
+  html = html.replace(/window\.location\s*=\s*["'][^"']*["']/gi, '');
   
-  // Handle now.gg and gaming sites
-  html = html.replace(/<meta[^>]*name=["']viewport["'][^>]*>/gi, '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">');
+  // Viewport optimization
+  html = html.replace(/<meta[^>]*name=["']viewport["'][^>]*>/gi, '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=10, user-scalable=yes">');
   
-  // Rewrite links more aggressively for gaming/interactive sites
-  if (settings.linkRewrite !== 'safe') {
-    // Rewrite src and href attributes
-    html = html.replace(/(src|href|action)=(["'])((?:https?:)?\/\/[^"'\s]+|(?:\/[^"'\s]*)|data:[^"']+)\2/gi, (match, attr, quote, url) => {
-      if (url.startsWith('data:') || url.startsWith('blob:')) return match;
+  // Inject universal CSP bypass and sandboxing handler
+  const cspMeta = '<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests; default-src * data: blob:; script-src * \'unsafe-inline\' \'unsafe-eval\'; style-src * \'unsafe-inline\'; frame-src * data: blob:;">';
+  html = html.replace(/<head[^>]*>/i, '<head>' + cspMeta);
+  
+  // Rewrite all resource URLs aggressively
+  if (settings.linkRewrite === 'aggressive') {
+    html = html.replace(/(href|src|action|data|poster|srcset)=["']([^"']*?)["']/gi, (match, attr, url) => {
+      if (!url || url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('javascript:')) return match;
+      
       let absolute;
-      try { 
-        absolute = new URL(url, baseUrl).href; 
-      } catch { 
-        return match; 
+      try {
+        absolute = new URL(url, baseUrl).href;
+      } catch {
+        return match;
       }
+      
       const proxied = buildProxyUrl(absolute);
-      return `${attr}=${quote}${proxied}${quote}`;
+      return `${attr}="${proxied}"`;
     });
     
-    // Rewrite AJAX/XHR calls
-    html = html.replace(/fetch\((["'`])(https?:)?\/\/[^"'`]+\1/g, (match) => {
-      const urlMatch = match.match(/fetch\((["'`])(.*?)\1/);
-      if (!urlMatch) return match;
-      const [, quote, url] = urlMatch;
-      const proxied = buildProxyUrl(url);
-      return `fetch(${quote}${proxied}${quote}`;
+    // Rewrite CSS imports and URLs
+    html = html.replace(/url\(["']?([^)'"]*?)["']?\)/g, (match, url) => {
+      if (url.startsWith('data:') || url.startsWith('blob:')) return match;
+      
+      try {
+        const absolute = new URL(url, baseUrl).href;
+        return `url("${buildProxyUrl(absolute)}")`;
+      } catch {
+        return match;
+      }
+    });
+    
+    // Rewrite fetch/XHR calls
+    html = html.replace(/fetch\s*\(\s*["'`]([^"'`]+)["'`]/g, (match, url) => {
+      if (url.startsWith('/')) {
+        const absolute = new URL(url, baseUrl).href;
+        return `fetch("${buildProxyUrl(absolute)}`;
+      }
+      return match;
     });
   }
-
-  html = html.replace(/<form\s/gi, '<form target="_blank" ');
   
-  // Inject CSP bypass for iframes
-  html = html.replace(/<head>/i, '<head><meta http-equiv="Content-Security-Policy" content="default-src * data: blob:; script-src * \'unsafe-inline\' \'unsafe-eval\'; style-src * \'unsafe-inline\';">');
+  // Fix forms to open in new window
+  html = html.replace(/<form\s/gi, '<form target="_blank" ');
   
   return html;
 }
 
-async function performSearch(query) {
-  searchResultsPanel.classList.add('show');
-  searchResults.innerHTML = '<div style="color: #c084fc; text-align: center; padding: 2rem;">Searching...</div>';
-  addLog(`🔎 Searching for: "${query}"`, 'info');
+// Google Embed compatibility layer
+async function loadWithGoogleEmbed(url) {
+  const docUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+  iframe.src = docUrl;
+}
+
+// Fetch-based method for APIs and JSON
+async function loadWithFetch(url) {
+  const proxyUrl = buildProxyUrl(url);
   
-  try {
-    const searchUrl = SEARCH_ENGINES[settings.searchEngine] + encodeURIComponent(query);
-    const proxyUrl = buildProxyUrl(searchUrl);
-    
-    const resp = await fetch(proxyUrl, {
-      headers: {
-        'User-Agent': settings.userAgent === 'random' ? getRandomUserAgent() : USER_AGENTS[settings.userAgent]
-      }
-    });
-    
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const html = await resp.text();
-    
-    // Parse results from HTML
-    const results = [];
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    
-    // Extract results (simplified)
-    const resultElements = doc.querySelectorAll('a[href*="search"], [data-result]');
-    resultElements.forEach((el, idx) => {
-      if (idx < 10) {
-        results.push({
-          title: el.textContent.slice(0, 50),
-          url: el.href
-        });
-      }
-    });
-    
-    if (results.length === 0) {
-      searchResults.innerHTML = '<div style="color: #b8a8d1; text-align: center; padding: 2rem;">No results found</div>';
-    } else {
-      searchResults.innerHTML = results.map(r => `
-        <div class="search-result-card" onclick="loadUrl('${r.url}')">
-          <h3>${r.title}</h3>
-          <div class="url">${r.url}</div>
-        </div>
-      `).join('');
+  const response = await fetch(proxyUrl, {
+    headers: {
+      'User-Agent': settings.userAgent === 'random' ? getRandomUserAgent() : USER_AGENTS[settings.userAgent]
     }
-    addLog(`✅ Found ${results.length} results`, 'success');
-  } catch (err) {
-    searchResults.innerHTML = `<div style="color: #f87171; text-align: center; padding: 2rem;">Error: ${err.message}</div>`;
-    addLog(`❌ Search failed: ${err.message}`, 'error');
-  }
+  });
+  
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  
+  let content = await response.text();
+  content = rewriteHtml(content, url);
+  
+  iframe.srcdoc = content;
 }
 
-async function loadUrl(url) {
-  urlInput.value = url;
-  handleGo();
+// iFrame method (default, works with most sites)
+async function loadWithIframe(url) {
+  const proxyUrl = buildProxyUrl(url);
+  
+  const response = await fetch(proxyUrl, {
+    headers: {
+      'User-Agent': settings.userAgent === 'random' ? getRandomUserAgent() : USER_AGENTS[settings.userAgent]
+    }
+  });
+  
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  
+  let html = await response.text();
+  html = rewriteHtml(html, url);
+  
+  iframe.srcdoc = html;
 }
 
+// Main URL handler
 async function handleGo() {
   const input = urlInput.value.trim();
+  
   if (!input) {
     feedback.textContent = '⚠️ Enter a URL or search term';
     feedback.className = 'error';
     return;
   }
   
-  state.requests++;
-  updateStats();
-  
   let targetUrl;
-  if (isValidURL(input)) {
+  if (input.toLowerCase() === 'about:blank' || input === '') {
+    // Handle about:blank cloaking
+    toggleCloak();
+    return;
+  } else if (input.startsWith('http://') || input.startsWith('https://')) {
     targetUrl = input;
-    feedback.textContent = '🔄 Loading...';
-    feedback.className = 'info';
-  } else if (isSearchQuery(input)) {
-    feedback.textContent = '🔍 Searching...';
-    feedback.className = 'info';
-    return performSearch(input);
-  } else {
+  } else if (input.includes('.')) {
     targetUrl = 'https://' + input;
-    feedback.textContent = '🔄 Loading...';
-    feedback.className = 'info';
+  } else {
+    // Search query - redirect to Google
+    targetUrl = `https://www.google.com/search?q=${encodeURIComponent(input)}`;
   }
   
+  state.requests++;
+  state.currentUrl = targetUrl;
+  updateStats();
+  loadingOverlay.style.display = 'flex';
+  feedback.textContent = '🔄 Loading...';
+  feedback.className = 'info';
+  
   try {
-    const proxyUrl = buildProxyUrl(targetUrl);
-    loadingOverlay.style.display = 'flex';
-    
     const start = Date.now();
-    const resp = await fetch(proxyUrl, {
-      headers: {
-        'User-Agent': settings.userAgent === 'random' ? getRandomUserAgent() : USER_AGENTS[settings.userAgent]
-      }
-    });
+    
+    if (settings.proxyMethod === 'google-embed') {
+      await loadWithGoogleEmbed(targetUrl);
+    } else if (settings.proxyMethod === 'fetch') {
+      await loadWithFetch(targetUrl);
+    } else {
+      await loadWithIframe(targetUrl);
+    }
+    
     const elapsed = Date.now() - start;
-    
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    let html = await resp.text();
-    
-    html = rewriteHtml(html, targetUrl);
     state.totalTime += elapsed;
     state.avgTime = Math.round(state.totalTime / state.requests);
     
-    iframe.srcdoc = html;
     loadingOverlay.style.display = 'none';
-    feedback.textContent = `✅ Loaded in ${elapsed}ms`;
+    feedback.textContent = `✅ Loaded in ${elapsed}ms using ${settings.proxyMethod}`;
     feedback.className = 'valid';
-    addLog(`✅ Loaded ${targetUrl} (${elapsed}ms)`, 'success');
+    addLog(`✅ Loaded ${targetUrl.substring(0, 50)}... (${elapsed}ms)`, 'success');
+    
   } catch (err) {
     loadingOverlay.style.display = 'none';
-    feedback.textContent = `❌ ${err.message}`;
+    feedback.textContent = `❌ Error: ${err.message}`;
     feedback.className = 'error';
-    state.blocked++;
-    updateStats();
-    addLog(`❌ Failed to load: ${err.message}`, 'error');
+    addLog(`❌ Failed: ${err.message}`, 'error');
   }
 }
 
@@ -1098,65 +969,26 @@ urlInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') handleGo();
 });
 
-toggleAdvanced.addEventListener('change', () => {
-  advancedPanel.classList.toggle('show');
-  if (toggleAdvanced.checked) {
-    addLog('⚙️ Advanced settings opened', 'info');
-  } else {
-    addLog('⚙️ Advanced settings closed', 'info');
-  }
+// Settings
+document.getElementById('toggleAdvanced')?.addEventListener('change', () => {
+  document.getElementById('advancedPanel').classList.toggle('show');
 });
 
-// Apply settings
 document.getElementById('applySettings')?.addEventListener('click', () => {
-  settings.rateLimit = parseInt(document.getElementById('rateLimit').value);
-  settings.cacheTtl = parseInt(document.getElementById('cacheTtl').value);
-  settings.requestTimeout = parseInt(document.getElementById('requestTimeout').value);
-  settings.autoRetry = document.getElementById('autoRetry').value === 'true';
-  settings.userAgent = document.getElementById('userAgent').value;
+  settings.proxyMethod = document.getElementById('proxyMethod').value;
   settings.proxyApi = document.getElementById('proxyApi').value;
+  settings.userAgent = document.getElementById('userAgent').value;
   settings.linkRewrite = document.getElementById('linkRewrite').value;
-  settings.searchEngine = document.getElementById('searchEngine').value;
   addLog('✅ Settings applied', 'success');
 });
 
-// Clear cache
 document.getElementById('clearCache')?.addEventListener('click', () => {
   cache.clear();
   state.cacheHits = 0;
-  state.cacheSize = 0;
   updateStats();
   addLog('🗑️ Cache cleared', 'success');
 });
 
-// Download page
-document.getElementById('downloadPage')?.addEventListener('click', () => {
-  const link = document.createElement('a');
-  link.href = 'data:text/html,' + encodeURIComponent(iframe.srcdoc || 'No page loaded');
-  link.download = 'page.html';
-  link.click();
-  addLog('📥 Page download started', 'success');
-});
-
-// Log filters
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.currentFilter = btn.dataset.filter;
-    
-    const entries = logsContainer.querySelectorAll('.log-entry');
-    entries.forEach(entry => {
-      if (state.currentFilter === 'all' || entry.dataset.level === state.currentFilter) {
-        entry.style.display = 'block';
-      } else {
-        entry.style.display = 'none';
-      }
-    });
-  });
-});
-
-// Initial update
 updateStats();
 </script>
 
