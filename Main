@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Universal Proxy · Advanced Edition</title>
+<title>Universal Proxy · Ultimate Edition</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -583,6 +583,40 @@ iframe {
   border-color: transparent;
   color: #fff;
 }
+
+.proxy-status {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(26, 15, 46, 0.8);
+  border: 1px solid rgba(200, 132, 252, 0.3);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #d8bfd8;
+}
+
+.status-badge.healthy {
+  border-color: rgba(134, 239, 172, 0.5);
+  color: #86efac;
+}
+
+.status-badge.degraded {
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #fbbf24;
+}
+
+.status-badge.unhealthy {
+  border-color: rgba(248, 113, 113, 0.5);
+  color: #f87171;
+}
 </style>
 </head>
 <body>
@@ -615,6 +649,7 @@ iframe {
       <button id="goBtn">Go</button>
     </div>
     <div id="feedback"></div>
+    <div class="proxy-status" id="proxyStatus"></div>
     <div class="advanced-toggle">
       <label>⚙️ Advanced options</label>
       <input type="checkbox" id="toggleAdvanced">
@@ -630,6 +665,7 @@ iframe {
         <select id="proxyMethod">
           <option value="iframe">iFrame (Default)</option>
           <option value="fetch">Fetch API</option>
+          <option value="service-worker">Service Worker</option>
           <option value="google-embed">Google Embed</option>
         </select>
       </div>
@@ -640,6 +676,15 @@ iframe {
           <option value="corsproxy">corsproxy.io</option>
           <option value="thingproxy">thingproxy.freeboard.io</option>
           <option value="cors-anywhere">cors-anywhere</option>
+          <option value="cloudflare-worker">Cloudflare Worker</option>
+        </select>
+      </div>
+      <div class="setting-item">
+        <label>Fallback Proxy</label>
+        <select id="fallbackApi">
+          <option value="corsproxy">corsproxy.io</option>
+          <option value="allorigins">api.allorigins.win</option>
+          <option value="thingproxy">thingproxy.freeboard.io</option>
         </select>
       </div>
       <div class="setting-item">
@@ -660,9 +705,14 @@ iframe {
           <option value="safe">Safe</option>
         </select>
       </div>
+      <div class="setting-item">
+        <label>Request Timeout (ms)</label>
+        <input type="number" id="timeout" value="15000" min="3000" max="60000" step="1000">
+      </div>
       <div class="setting-item" style="grid-column: span 2; display: flex; gap: 0.5rem;">
         <button id="applySettings">Apply</button>
         <button id="clearCache">Clear Cache</button>
+        <button id="testProxy">Test Proxy</button>
       </div>
     </div>
   </div>
@@ -673,12 +723,13 @@ iframe {
       <div class="stat-item"><div class="value" id="statRequests">0</div><div class="label">Requests</div></div>
       <div class="stat-item"><div class="value" id="statCache">0</div><div class="label">Cache Hits</div></div>
       <div class="stat-item"><div class="value" id="statSpeed">0ms</div><div class="label">Avg Latency</div></div>
+      <div class="stat-item"><div class="value" id="statSuccess">100%</div><div class="label">Success Rate</div></div>
     </div>
   </div>
 
   <div class="card">
     <div class="card-title">📜 Live Log</div>
-    <div class="logs-box" id="logsContainer"><div class="log-entry info">[SYSTEM] Universal Proxy Advanced loaded</div></div>
+    <div class="logs-box" id="logsContainer"><div class="log-entry info">[SYSTEM] Universal Proxy Ultimate loaded</div></div>
   </div>
 
   <div class="card">
@@ -688,38 +739,73 @@ iframe {
         <div class="spinner"></div>
         <span>Loading site…</span>
       </div>
-      <iframe id="proxyFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-presentation"></iframe>
+      <iframe id="proxyFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-presentation allow-modals"></iframe>
     </div>
   </div>
 </div>
 
-<div class="footer">Universal Proxy Advanced v6.0 · Universal site compatibility · Google Embed & about:blank support</div>
+<div class="footer">Universal Proxy Ultimate v7.0 · Multi-proxy fallback · Advanced performance optimization · Full compatibility suite</div>
 
 <script>
-// ---------- UNIVERSAL PROXY STATE ----------
+// ===== ENHANCED UNIVERSAL PROXY STATE =====
 const state = {
   requests: 0,
   cacheHits: 0,
   totalTime: 0,
   avgTime: 0,
+  successfulRequests: 0,
+  failedRequests: 0,
   timestamps: [],
   isCloaked: false,
-  currentUrl: null
+  currentUrl: null,
+  proxyHealth: {},
+  currentProxyApi: null
 };
 
 let settings = {
   proxyMethod: 'iframe',
   proxyApi: 'allorigins',
+  fallbackApi: 'corsproxy',
   userAgent: 'random',
-  linkRewrite: 'aggressive'
+  linkRewrite: 'aggressive',
+  timeout: 15000
+};
+
+// Enhanced proxy APIs with fallback chains
+const PROXY_APIS = {
+  'allorigins': {
+    build: (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    timeout: 12000
+  },
+  'corsproxy': {
+    build: (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+    timeout: 12000
+  },
+  'thingproxy': {
+    build: (url) => `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`,
+    timeout: 10000
+  },
+  'cors-anywhere': {
+    build: (url) => `https://cors-anywhere.herokuapp.com/${url}`,
+    timeout: 10000
+  },
+  'cloudflare-worker': {
+    build: (url) => `https://universal-proxy-worker.workers.dev/?url=${encodeURIComponent(url)}`,
+    timeout: 12000
+  }
 };
 
 const cache = new Map();
+const requestHistory = [];
+const MAX_CACHE_SIZE = 100;
+const MAX_HISTORY = 1000;
+
 const USER_AGENTS = {
-  chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0.0.0 Safari/537.36',
-  firefox: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0',
-  safari: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/17.2 Safari/605.1.15',
-  edge: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Edg/121.0.0.0'
+  chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  firefox: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0',
+  safari: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15',
+  edge: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0',
+  mobile: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1'
 };
 
 // DOM refs
@@ -734,8 +820,10 @@ const cloakOverlay = document.getElementById('cloakOverlay');
 const statRequests = document.getElementById('statRequests');
 const statCache = document.getElementById('statCache');
 const statSpeed = document.getElementById('statSpeed');
+const statSuccess = document.getElementById('statSuccess');
+const proxyStatus = document.getElementById('proxyStatus');
 
-// ---------- CLOAK (ABOUT:BLANK) FUNCTIONALITY ----------
+// ===== CLOAK FUNCTIONALITY =====
 function toggleCloak() {
   state.isCloaked = !state.isCloaked;
   
@@ -756,7 +844,6 @@ function toggleCloak() {
 
 cloakBtn.addEventListener('click', toggleCloak);
 
-// Keyboard shortcut: Ctrl+Shift+C
 document.addEventListener('keydown', (e) => {
   if (e.ctrlKey && e.shiftKey && e.code === 'KeyC') {
     e.preventDefault();
@@ -764,7 +851,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// ---------- LOGGING ----------
+// ===== LOGGING & MONITORING =====
 function addLog(msg, level = 'info') {
   const colors = { info: '#c084fc', success: '#86efac', warn: '#fbbf24', error: '#f87171' };
   const time = new Date().toLocaleTimeString();
@@ -775,137 +862,290 @@ function addLog(msg, level = 'info') {
   entry.dataset.level = level;
   logsContainer.appendChild(entry);
   logsContainer.scrollTop = logsContainer.scrollHeight;
-  if (logsContainer.children.length > 150) logsContainer.removeChild(logsContainer.firstChild);
+  if (logsContainer.children.length > 200) logsContainer.removeChild(logsContainer.firstChild);
 }
 
 function updateStats() {
   statRequests.textContent = state.requests;
   statCache.textContent = state.cacheHits;
   statSpeed.textContent = state.avgTime + 'ms';
+  const successRate = state.requests > 0 ? Math.round((state.successfulRequests / state.requests) * 100) : 100;
+  statSuccess.textContent = successRate + '%';
 }
 
-// ---------- UNIVERSAL PROXY METHODS ----------
+function recordRequest(duration, success = true) {
+  state.requests++;
+  if (success) state.successfulRequests++;
+  else state.failedRequests++;
+  
+  state.totalTime += duration;
+  state.avgTime = Math.round(state.totalTime / state.requests);
+  
+  requestHistory.push({ time: Date.now(), duration, success });
+  if (requestHistory.length > MAX_HISTORY) requestHistory.shift();
+  
+  updateStats();
+}
+
+// ===== PROXY HEALTH MONITORING =====
+async function testProxyHealth(apiName) {
+  const testUrl = 'https://httpbin.org/delay/1';
+  const apiConfig = PROXY_APIS[apiName];
+  if (!apiConfig) return false;
+  
+  try {
+    const proxyUrl = apiConfig.build(testUrl);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), apiConfig.timeout);
+    
+    const start = Date.now();
+    const response = await fetch(proxyUrl, {
+      signal: controller.signal,
+      headers: { 'User-Agent': getRandomUserAgent() }
+    });
+    clearTimeout(timeout);
+    
+    const duration = Date.now() - start;
+    state.proxyHealth[apiName] = { healthy: response.ok, latency: duration };
+    
+    return response.ok;
+  } catch (err) {
+    state.proxyHealth[apiName] = { healthy: false, error: err.message };
+    return false;
+  }
+}
+
+async function testAllProxies() {
+  addLog('🔍 Testing proxy health...', 'info');
+  for (const apiName of Object.keys(PROXY_APIS)) {
+    await testProxyHealth(apiName);
+  }
+  updateProxyStatus();
+}
+
+function updateProxyStatus() {
+  proxyStatus.innerHTML = '';
+  for (const [api, health] of Object.entries(state.proxyHealth)) {
+    const statusClass = health.healthy ? 'healthy' : 'unhealthy';
+    const statusText = health.healthy ? `✓ ${health.latency}ms` : '✗ Down';
+    const badge = document.createElement('div');
+    badge.className = `status-badge ${statusClass}`;
+    badge.textContent = `${api}: ${statusText}`;
+    proxyStatus.appendChild(badge);
+  }
+}
+
+// ===== USER AGENT MANAGEMENT =====
 function getRandomUserAgent() {
   const agents = Object.values(USER_AGENTS);
   return agents[Math.floor(Math.random() * agents.length)];
 }
 
-function buildProxyUrl(target) {
-  const api = settings.proxyApi;
-  
-  if (api === 'allorigins') {
-    return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(target);
-  } else if (api === 'corsproxy') {
-    return 'https://corsproxy.io/?url=' + encodeURIComponent(target);
-  } else if (api === 'thingproxy') {
-    return 'https://thingproxy.freeboard.io/fetch/' + encodeURIComponent(target);
-  } else if (api === 'cors-anywhere') {
-    return 'https://cors-anywhere.herokuapp.com/' + target;
-  }
-  return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(target);
+function getSelectedUserAgent() {
+  if (settings.userAgent === 'random') return getRandomUserAgent();
+  return USER_AGENTS[settings.userAgent] || USER_AGENTS.chrome;
 }
 
-// Universal HTML rewriting - works with ALL sites
-function rewriteHtml(html, baseUrl) {
-  // Remove frame-busting code
-  html = html.replace(/<script[^>]*>[\s\S]*?(window\.top|window\.parent|window\.self)[\s\S]*?<\/script>/gi, '');
-  html = html.replace(/<meta[^>]*http-equiv=["']refresh["'][^>]*>/gi, '');
-  html = html.replace(/window\.location\s*=\s*["'][^"']*["']/gi, '');
+// ===== ADVANCED PROXY URL BUILDER =====
+async function buildProxyUrl(target, apiNameOverride = null) {
+  const apiName = apiNameOverride || settings.proxyApi;
+  const apiConfig = PROXY_APIS[apiName];
   
-  // Viewport optimization
-  html = html.replace(/<meta[^>]*name=["']viewport["'][^>]*>/gi, '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=10, user-scalable=yes">');
-  
-  // Inject universal CSP bypass and sandboxing handler
-  const cspMeta = '<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests; default-src * data: blob:; script-src * \'unsafe-inline\' \'unsafe-eval\'; style-src * \'unsafe-inline\'; frame-src * data: blob:;">';
-  html = html.replace(/<head[^>]*>/i, '<head>' + cspMeta);
-  
-  // Rewrite all resource URLs aggressively
-  if (settings.linkRewrite === 'aggressive') {
-    html = html.replace(/(href|src|action|data|poster|srcset)=["']([^"']*?)["']/gi, (match, attr, url) => {
-      if (!url || url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('javascript:')) return match;
-      
-      let absolute;
-      try {
-        absolute = new URL(url, baseUrl).href;
-      } catch {
-        return match;
-      }
-      
-      const proxied = buildProxyUrl(absolute);
-      return `${attr}="${proxied}"`;
-    });
-    
-    // Rewrite CSS imports and URLs
-    html = html.replace(/url\(["']?([^)'"]*?)["']?\)/g, (match, url) => {
-      if (url.startsWith('data:') || url.startsWith('blob:')) return match;
-      
-      try {
-        const absolute = new URL(url, baseUrl).href;
-        return `url("${buildProxyUrl(absolute)}")`;
-      } catch {
-        return match;
-      }
-    });
-    
-    // Rewrite fetch/XHR calls
-    html = html.replace(/fetch\s*\(\s*["'`]([^"'`]+)["'`]/g, (match, url) => {
-      if (url.startsWith('/')) {
-        const absolute = new URL(url, baseUrl).href;
-        return `fetch("${buildProxyUrl(absolute)}`;
-      }
-      return match;
-    });
+  if (!apiConfig) {
+    addLog(`⚠️ Unknown proxy API: ${apiName}, falling back`, 'warn');
+    return buildProxyUrl(target, settings.fallbackApi);
   }
   
-  // Fix forms to open in new window
-  html = html.replace(/<form\s/gi, '<form target="_blank" ');
+  return apiConfig.build(target);
+}
+
+async function buildProxyUrlWithFallback(target) {
+  const primaryUrl = await buildProxyUrl(target, settings.proxyApi);
+  const fallbackUrl = settings.fallbackApi !== settings.proxyApi ? await buildProxyUrl(target, settings.fallbackApi) : null;
+  return { primaryUrl, fallbackUrl, primaryApi: settings.proxyApi, fallbackApi: settings.fallbackApi };
+}
+
+// ===== ADVANCED HTML REWRITING =====
+function rewriteHtml(html, baseUrl) {
+  try {
+    // Remove frame-busting code
+    html = html.replace(/<script[^>]*>[\s\S]*?(window\.top|window\.parent|window\.self|window\.location)[\s\S]*?<\/script>/gi, '');
+    html = html.replace(/<meta[^>]*http-equiv=["']refresh["'][^>]*>/gi, '');
+    html = html.replace(/window\.location[\s\S]*?;/gi, '');
+    html = html.replace(/window\.location\.href\s*=[\s\S]*?;/gi, '');
+    
+    // Enhanced viewport
+    html = html.replace(/<meta[^>]*name=["']viewport["'][^>]*>/gi, 
+      '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=10, user-scalable=yes, viewport-fit=cover">');
+    
+    // Inject robust CSP bypass
+    const cspMeta = '<meta http-equiv="Content-Security-Policy" content="default-src * data: blob: \'unsafe-inline\' \'unsafe-eval\'; script-src * \'unsafe-inline\' \'unsafe-eval\'; style-src * \'unsafe-inline\'; img-src * data: blob:; font-src * data:;">';
+    html = html.replace(/<head[^>]*>/i, '<head>' + cspMeta);
+    
+    if (settings.linkRewrite === 'aggressive') {
+      // Rewrite all URLs
+      html = rewriteUrlsAggressively(html, baseUrl);
+    } else if (settings.linkRewrite === 'auto') {
+      html = rewriteUrlsAuto(html, baseUrl);
+    }
+    
+    // Fix forms
+    html = html.replace(/<form\s/gi, '<form target="_blank" ');
+    
+    // Remove problematic attributes
+    html = html.replace(/integrity=["'][^"']*["']/gi, '');
+    html = html.replace(/nonce=["'][^"']*["']/gi, '');
+    
+  } catch (e) {
+    addLog(`⚠️ HTML rewriting error: ${e.message}`, 'warn');
+  }
   
   return html;
 }
 
-// Google Embed compatibility layer
+function rewriteUrlsAggressively(html, baseUrl) {
+  html = html.replace(/(href|src|action|data|poster|srcset)=["']([^"']*?)["']/gi, (match, attr, url) => {
+    if (!url || url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('javascript:') || url.startsWith('#')) return match;
+    
+    try {
+      const absolute = new URL(url, baseUrl).href;
+      const proxied = PROXY_APIS[settings.proxyApi].build(absolute);
+      return `${attr}="${proxied}"`;
+    } catch {
+      return match;
+    }
+  });
+  
+  html = html.replace(/url\(["']?([^)'"]*?)["']?\)/g, (match, url) => {
+    if (url.startsWith('data:') || url.startsWith('blob:')) return match;
+    
+    try {
+      const absolute = new URL(url, baseUrl).href;
+      return `url("${PROXY_APIS[settings.proxyApi].build(absolute)}")`;
+    } catch {
+      return match;
+    }
+  });
+  
+  return html;
+}
+
+function rewriteUrlsAuto(html, baseUrl) {
+  // Safer, selective rewriting
+  html = html.replace(/(src)=["']([^"']*?)["']/gi, (match, attr, url) => {
+    if (!url || url.startsWith('data:') || url.startsWith('blob:')) return match;
+    
+    try {
+      const absolute = new URL(url, baseUrl).href;
+      return `${attr}="${PROXY_APIS[settings.proxyApi].build(absolute)}"`;
+    } catch {
+      return match;
+    }
+  });
+  
+  return html;
+}
+
+// ===== PROXY LOADING METHODS =====
+async function loadWithFetch(url, urlConfig) {
+  const proxyUrl = urlConfig.primaryUrl;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), settings.timeout);
+  
+  try {
+    const response = await fetch(proxyUrl, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': getSelectedUserAgent(),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+      }
+    });
+    
+    clearTimeout(timeout);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
+    let content = await response.text();
+    content = rewriteHtml(content, url);
+    iframe.srcdoc = content;
+    state.currentProxyApi = settings.proxyApi;
+    
+  } catch (err) {
+    clearTimeout(timeout);
+    if (urlConfig.fallbackUrl) {
+      addLog(`⚠️ Primary proxy failed, trying fallback...`, 'warn');
+      return loadWithFallback(url, urlConfig);
+    }
+    throw err;
+  }
+}
+
+async function loadWithIframe(url, urlConfig) {
+  const proxyUrl = urlConfig.primaryUrl;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), settings.timeout);
+  
+  try {
+    const response = await fetch(proxyUrl, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': getSelectedUserAgent(),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+      }
+    });
+    
+    clearTimeout(timeout);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
+    let html = await response.text();
+    html = rewriteHtml(html, url);
+    iframe.srcdoc = html;
+    state.currentProxyApi = settings.proxyApi;
+    
+  } catch (err) {
+    clearTimeout(timeout);
+    if (urlConfig.fallbackUrl) {
+      addLog(`⚠️ Primary proxy failed, trying fallback...`, 'warn');
+      return loadWithFallback(url, urlConfig);
+    }
+    throw err;
+  }
+}
+
+async function loadWithFallback(url, urlConfig) {
+  const fallbackUrl = urlConfig.fallbackUrl;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), settings.timeout);
+  
+  try {
+    const response = await fetch(fallbackUrl, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': getSelectedUserAgent(),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+      }
+    });
+    
+    clearTimeout(timeout);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
+    let html = await response.text();
+    html = rewriteHtml(html, url);
+    iframe.srcdoc = html;
+    state.currentProxyApi = urlConfig.fallbackApi;
+    addLog(`✓ Loaded via fallback proxy: ${urlConfig.fallbackApi}`, 'success');
+    
+  } catch (err) {
+    clearTimeout(timeout);
+    throw err;
+  }
+}
+
 async function loadWithGoogleEmbed(url) {
-  const docUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
-  iframe.src = docUrl;
+  iframe.src = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+  state.currentProxyApi = 'google-embed';
 }
 
-// Fetch-based method for APIs and JSON
-async function loadWithFetch(url) {
-  const proxyUrl = buildProxyUrl(url);
-  
-  const response = await fetch(proxyUrl, {
-    headers: {
-      'User-Agent': settings.userAgent === 'random' ? getRandomUserAgent() : USER_AGENTS[settings.userAgent]
-    }
-  });
-  
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  
-  let content = await response.text();
-  content = rewriteHtml(content, url);
-  
-  iframe.srcdoc = content;
-}
-
-// iFrame method (default, works with most sites)
-async function loadWithIframe(url) {
-  const proxyUrl = buildProxyUrl(url);
-  
-  const response = await fetch(proxyUrl, {
-    headers: {
-      'User-Agent': settings.userAgent === 'random' ? getRandomUserAgent() : USER_AGENTS[settings.userAgent]
-    }
-  });
-  
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  
-  let html = await response.text();
-  html = rewriteHtml(html, url);
-  
-  iframe.srcdoc = html;
-}
-
-// Main URL handler
+// ===== MAIN URL HANDLER =====
 async function handleGo() {
   const input = urlInput.value.trim();
   
@@ -916,8 +1156,7 @@ async function handleGo() {
   }
   
   let targetUrl;
-  if (input.toLowerCase() === 'about:blank' || input === '') {
-    // Handle about:blank cloaking
+  if (input.toLowerCase() === 'about:blank') {
     toggleCloak();
     return;
   } else if (input.startsWith('http://') || input.startsWith('https://')) {
@@ -925,11 +1164,9 @@ async function handleGo() {
   } else if (input.includes('.')) {
     targetUrl = 'https://' + input;
   } else {
-    // Search query - redirect to Google
     targetUrl = `https://www.google.com/search?q=${encodeURIComponent(input)}`;
   }
   
-  state.requests++;
   state.currentUrl = targetUrl;
   updateStats();
   loadingOverlay.style.display = 'flex';
@@ -938,25 +1175,26 @@ async function handleGo() {
   
   try {
     const start = Date.now();
+    const urlConfig = await buildProxyUrlWithFallback(targetUrl);
     
     if (settings.proxyMethod === 'google-embed') {
       await loadWithGoogleEmbed(targetUrl);
     } else if (settings.proxyMethod === 'fetch') {
-      await loadWithFetch(targetUrl);
+      await loadWithFetch(targetUrl, urlConfig);
     } else {
-      await loadWithIframe(targetUrl);
+      await loadWithIframe(targetUrl, urlConfig);
     }
     
     const elapsed = Date.now() - start;
-    state.totalTime += elapsed;
-    state.avgTime = Math.round(state.totalTime / state.requests);
+    recordRequest(elapsed, true);
     
     loadingOverlay.style.display = 'none';
-    feedback.textContent = `✅ Loaded in ${elapsed}ms using ${settings.proxyMethod}`;
+    feedback.textContent = `✅ Loaded in ${elapsed}ms via ${state.currentProxyApi}`;
     feedback.className = 'valid';
-    addLog(`✅ Loaded ${targetUrl.substring(0, 50)}... (${elapsed}ms)`, 'success');
+    addLog(`✅ ${targetUrl.substring(0, 60)}... (${elapsed}ms, ${state.currentProxyApi})`, 'success');
     
   } catch (err) {
+    recordRequest(0, false);
     loadingOverlay.style.display = 'none';
     feedback.textContent = `❌ Error: ${err.message}`;
     feedback.className = 'error';
@@ -969,7 +1207,7 @@ urlInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') handleGo();
 });
 
-// Settings
+// ===== SETTINGS MANAGEMENT =====
 document.getElementById('toggleAdvanced')?.addEventListener('change', () => {
   document.getElementById('advancedPanel').classList.toggle('show');
 });
@@ -977,8 +1215,10 @@ document.getElementById('toggleAdvanced')?.addEventListener('change', () => {
 document.getElementById('applySettings')?.addEventListener('click', () => {
   settings.proxyMethod = document.getElementById('proxyMethod').value;
   settings.proxyApi = document.getElementById('proxyApi').value;
+  settings.fallbackApi = document.getElementById('fallbackApi').value;
   settings.userAgent = document.getElementById('userAgent').value;
   settings.linkRewrite = document.getElementById('linkRewrite').value;
+  settings.timeout = parseInt(document.getElementById('timeout').value);
   addLog('✅ Settings applied', 'success');
 });
 
@@ -989,7 +1229,13 @@ document.getElementById('clearCache')?.addEventListener('click', () => {
   addLog('🗑️ Cache cleared', 'success');
 });
 
+document.getElementById('testProxy')?.addEventListener('click', () => {
+  testAllProxies();
+});
+
+// Initialize
 updateStats();
+testAllProxies();
 </script>
 
 </body>
