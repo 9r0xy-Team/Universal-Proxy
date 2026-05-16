@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Universal Proxy · Pro Edition v7.2</title>
+<title>Universal Proxy · Pro Edition v8.0</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
@@ -275,6 +275,35 @@ nav a:hover::after {
   opacity: 0.6;
 }
 
+.search-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.8rem;
+}
+
+.search-btn {
+  padding: 0.6rem 1rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 100px;
+}
+
+.search-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.search-btn.active {
+  background: linear-gradient(135deg, #f87171, #c084fc);
+}
+
 #feedback { 
   font-size: 0.9rem; 
   margin-top: 0.6rem; 
@@ -365,7 +394,8 @@ nav a:hover::after {
 }
 
 .setting-item input, 
-.setting-item select {
+.setting-item select,
+.setting-item textarea {
   padding: 0.7rem; 
   border: 1px solid rgba(200, 132, 252, 0.3); 
   border-radius: 8px; 
@@ -377,7 +407,8 @@ nav a:hover::after {
 }
 
 .setting-item input:focus,
-.setting-item select:focus {
+.setting-item select:focus,
+.setting-item textarea:focus {
   border-color: #f87171;
   background: rgba(26, 15, 46, 1);
   box-shadow: 0 0 10px rgba(248, 113, 113, 0.3);
@@ -405,7 +436,7 @@ nav a:hover::after {
   border: 1px solid rgba(200, 132, 252, 0.2); 
   border-radius: 10px; 
   padding: 0.8rem;
-  max-height: 200px; 
+  max-height: 300px; 
   overflow-y: auto; 
   font-family: 'Cascadia Code', 'Fira Code', monospace; 
   font-size: 0.8rem; 
@@ -566,6 +597,41 @@ iframe {
   color: #f87171;
 }
 
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid rgba(200, 132, 252, 0.2);
+  margin-bottom: 1rem;
+}
+
+.tab-btn {
+  padding: 0.7rem 1.2rem;
+  background: transparent;
+  color: #d8bfd8;
+  border: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+.tab-btn:hover {
+  color: #f87171;
+}
+
+.tab-btn.active {
+  color: #f87171;
+  border-bottom-color: #f87171;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
 @media (max-width: 768px) {
   .container { padding: 1rem; }
   .card { padding: 1rem; margin-bottom: 1rem; }
@@ -574,6 +640,8 @@ iframe {
   .stats-row { gap: 0.5rem; }
   .stat-item { min-width: 100px; padding: 0.8rem; }
   .settings-grid { grid-template-columns: 1fr; }
+  .search-buttons { gap: 0.3rem; }
+  .search-btn { font-size: 0.75rem; padding: 0.5rem 0.8rem; }
 }
 </style>
 </head>
@@ -589,13 +657,12 @@ iframe {
 </div>
 
 <header>
-  <h1><span>⭐</span> Universal Proxy</h1>
+  <h1><span>⭐</span> Universal Proxy Pro</h1>
   <button class="cloak-btn" id="cloakBtn" title="Cloak tab to about:blank">🔒 Cloak Tab</button>
   <nav>
-    <a href="#">Dashboard</a>
-    <a href="#">Advanced</a>
-    <a href="#">Logs</a>
-    <a href="#">Pro Tools</a>
+    <a href="#" onclick="showDashboard(event)">Dashboard</a>
+    <a href="#" onclick="showAdvanced(event)">Advanced</a>
+    <a href="#" onclick="showProTools(event)">Pro Tools</a>
   </nav>
 </header>
 
@@ -606,72 +673,132 @@ iframe {
       <input type="text" id="urlInput" placeholder="https://example.com or search term" autocomplete="off" spellcheck="false">
       <button id="goBtn" title="Load URL (Enter)">Go</button>
     </div>
+    <div class="search-buttons">
+      <button class="search-btn active" id="searchGoogle" title="Search using Google">Google</button>
+      <button class="search-btn" id="searchDuckDuckGo" title="Search using DuckDuckGo">DuckDuckGo</button>
+      <button class="search-btn" id="searchBing" title="Search using Bing">Bing</button>
+      <button class="search-btn" id="searchYandex" title="Search using Yandex">Yandex</button>
+    </div>
     <div id="feedback"></div>
     <div class="proxy-status" id="proxyStatus"></div>
     <div class="advanced-toggle">
       <label>⚙️ Advanced options</label>
       <input type="checkbox" id="toggleAdvanced">
-      <span class="throttle-indicator" id="throttleIndicator"></span>
     </div>
   </div>
 
   <div class="card hidden-panel" id="advancedPanel">
-    <div class="card-title">⚡ Advanced Settings</div>
-    <div class="settings-grid">
-      <div class="setting-item">
-        <label>Proxy Method</label>
-        <select id="proxyMethod">
-          <option value="iframe">iFrame (Default)</option>
-          <option value="fetch">Fetch API</option>
-          <option value="service-worker">Service Worker</option>
-          <option value="google-embed">Google Embed</option>
-        </select>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(event, 'proxy-settings')">Proxy Settings</button>
+      <button class="tab-btn" onclick="switchTab(event, 'advanced-security')">Security</button>
+      <button class="tab-btn" onclick="switchTab(event, 'logs-tab')">Logs</button>
+    </div>
+
+    <div id="proxy-settings" class="tab-content active">
+      <div class="card-title">⚡ Proxy Configuration</div>
+      <div class="settings-grid">
+        <div class="setting-item">
+          <label>Proxy Method</label>
+          <select id="proxyMethod">
+            <option value="iframe">iFrame (Default)</option>
+            <option value="fetch">Fetch API</option>
+            <option value="service-worker">Service Worker</option>
+            <option value="google-embed">Google Embed</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label>Primary Proxy API</label>
+          <select id="proxyApi">
+            <option value="allorigins">api.allorigins.win</option>
+            <option value="corsproxy">corsproxy.io</option>
+            <option value="thingproxy">thingproxy.freeboard.io</option>
+            <option value="cors-anywhere">cors-anywhere</option>
+            <option value="cloudflare-worker">Cloudflare Worker</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label>Fallback Proxy</label>
+          <select id="fallbackApi">
+            <option value="corsproxy">corsproxy.io</option>
+            <option value="allorigins">api.allorigins.win</option>
+            <option value="thingproxy">thingproxy.freeboard.io</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label>User-Agent rotation</label>
+          <select id="userAgent">
+            <option value="random">Random</option>
+            <option value="chrome">Chrome</option>
+            <option value="firefox">Firefox</option>
+            <option value="safari">Safari</option>
+            <option value="edge">Edge</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label>Link rewriting</label>
+          <select id="linkRewrite">
+            <option value="aggressive">Aggressive</option>
+            <option value="auto">Auto</option>
+            <option value="safe">Safe</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label>Request Timeout (ms)</label>
+          <input type="number" id="timeout" value="12000" min="3000" max="60000" step="1000">
+        </div>
+        <div class="setting-item" style="grid-column: span 3; display: flex; gap: 0.5rem;">
+          <button id="applySettings">Apply</button>
+          <button id="clearCache">Clear Cache</button>
+          <button id="testProxy">Test Proxy</button>
+        </div>
       </div>
-      <div class="setting-item">
-        <label>Primary Proxy API</label>
-        <select id="proxyApi">
-          <option value="allorigins">api.allorigins.win</option>
-          <option value="corsproxy">corsproxy.io</option>
-          <option value="thingproxy">thingproxy.freeboard.io</option>
-          <option value="cors-anywhere">cors-anywhere</option>
-          <option value="cloudflare-worker">Cloudflare Worker</option>
-        </select>
+    </div>
+
+    <div id="advanced-security" class="tab-content">
+      <div class="card-title">🔐 Advanced Security & Features</div>
+      <div class="settings-grid">
+        <div class="setting-item">
+          <label>DNS over HTTPS</label>
+          <select id="dohProvider">
+            <option value="cloudflare">Cloudflare DNS</option>
+            <option value="google">Google DNS</option>
+            <option value="quad9">Quad9 DNS</option>
+            <option value="none">Disabled</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label>Custom Request Headers</label>
+          <textarea id="customHeaders" placeholder="X-Custom-Header: value&#10;X-Another: value2" rows="3" style="font-family: monospace;"></textarea>
+        </div>
+        <div class="setting-item">
+          <label>Request Inspection</label>
+          <input type="checkbox" id="inspectRequests" title="Log all request details">
+          <span style="font-size: 0.75rem; color: #9d8fb3;">Enable request inspection</span>
+        </div>
+        <div class="setting-item">
+          <label>Response Filtering</label>
+          <select id="responseFilter">
+            <option value="none">None</option>
+            <option value="ads">Block Ads</option>
+            <option value="tracking">Block Tracking</option>
+            <option value="both">Block Both</option>
+          </select>
+        </div>
+        <div class="setting-item" style="grid-column: span 2;">
+          <label>Request Limits</label>
+          <input type="number" id="requestLimit" value="100" min="10" max="1000" step="10" title="Max requests per minute">
+          <span style="font-size: 0.75rem; color: #9d8fb3;">requests/minute</span>
+        </div>
       </div>
-      <div class="setting-item">
-        <label>Fallback Proxy</label>
-        <select id="fallbackApi">
-          <option value="corsproxy">corsproxy.io</option>
-          <option value="allorigins">api.allorigins.win</option>
-          <option value="thingproxy">thingproxy.freeboard.io</option>
-        </select>
+    </div>
+
+    <div id="logs-tab" class="tab-content">
+      <div class="card-title">📜 Live Logs & Debug</div>
+      <div style="margin-bottom: 1rem;">
+        <button id="clearLogs" style="padding: 0.6rem 1rem; background: linear-gradient(135deg, #f87171, #c084fc); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Clear Logs</button>
+        <button id="downloadLogs" style="padding: 0.6rem 1rem; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-left: 0.5rem;">Download Logs</button>
       </div>
-      <div class="setting-item">
-        <label>User-Agent rotation</label>
-        <select id="userAgent">
-          <option value="random">Random</option>
-          <option value="chrome">Chrome</option>
-          <option value="firefox">Firefox</option>
-          <option value="safari">Safari</option>
-          <option value="edge">Edge</option>
-        </select>
-      </div>
-      <div class="setting-item">
-        <label>Link rewriting</label>
-        <select id="linkRewrite">
-          <option value="aggressive">Aggressive</option>
-          <option value="auto">Auto</option>
-          <option value="safe">Safe</option>
-        </select>
-      </div>
-      <div class="setting-item">
-        <label>Request Timeout (ms)</label>
-        <input type="number" id="timeout" value="12000" min="3000" max="60000" step="1000">
-      </div>
-      <div class="setting-item" style="grid-column: span 2; display: flex; gap: 0.5rem;">
-        <button id="applySettings">Apply</button>
-        <button id="clearCache">Clear Cache</button>
-        <button id="testProxy">Test Proxy</button>
-      </div>
+      <div class="logs-box" id="logsContainer"><div class="log-entry info">[SYSTEM] Universal Proxy Pro v8.0 initialized</div></div>
     </div>
   </div>
 
@@ -686,11 +813,6 @@ iframe {
   </div>
 
   <div class="card">
-    <div class="card-title">📜 Live Log</div>
-    <div class="logs-box" id="logsContainer"><div class="log-entry info">[SYSTEM] Universal Proxy Pro v7.2 initialized</div></div>
-  </div>
-
-  <div class="card">
     <div class="card-title">🔍 Live Preview</div>
     <div class="iframe-wrapper">
       <div class="loading-overlay" id="loadingOverlay">
@@ -702,11 +824,28 @@ iframe {
   </div>
 </div>
 
-<div class="footer">Universal Proxy Pro v7.2 · 20% Performance Boost · Smart Compression · Advanced Caching</div>
+<div class="footer">Universal Proxy Pro v8.0 · Integrated Search Engine · Advanced Security · Smart Compression</div>
 
 <script>
+// ===== SEARCH ENGINES CONFIG =====
+const SEARCH_ENGINES = {
+  google: (query) => `https://www.google.com/search?q=${encodeURIComponent(query)}`,
+  duckduckgo: (query) => `https://duckduckgo.com/?q=${encodeURIComponent(query)}`,
+  bing: (query) => `https://www.bing.com/search?q=${encodeURIComponent(query)}`,
+  yandex: (query) => `https://yandex.com/search/?text=${encodeURIComponent(query)}`
+};
+
+let currentSearchEngine = 'google';
+
+// ===== DNS OVER HTTPS PROVIDERS =====
+const DOH_PROVIDERS = {
+  cloudflare: 'https://dns.cloudflare.com/dns-query',
+  google: 'https://dns.google/resolve',
+  quad9: 'https://dns.quad9.net/dns-query',
+  none: null
+};
+
 // ===== PERFORMANCE OPTIMIZATIONS =====
-// 1. SMART CACHING WITH LRU EVICTION
 class LRUCache {
   constructor(maxSize = 150) {
     this.maxSize = maxSize;
@@ -759,7 +898,11 @@ let settings = {
   linkRewrite: 'aggressive',
   timeout: 12000,
   enableCompression: true,
-  enableBrotli: true
+  dohProvider: 'none',
+  customHeaders: {},
+  inspectRequests: false,
+  responseFilter: 'none',
+  requestLimit: 100
 };
 
 const cache = new LRUCache(150);
@@ -811,6 +954,34 @@ const statCache = document.getElementById('statCache');
 const statSpeed = document.getElementById('statSpeed');
 const statSuccess = document.getElementById('statSuccess');
 const proxyStatus = document.getElementById('proxyStatus');
+const toggleAdvanced = document.getElementById('toggleAdvanced');
+const advancedPanel = document.getElementById('advancedPanel');
+
+// ===== NAVIGATION =====
+function showDashboard(e) { e.preventDefault(); }
+function showAdvanced(e) { e.preventDefault(); toggleAdvanced.click(); }
+function showProTools(e) { e.preventDefault(); alert('Pro Tools coming soon!'); }
+
+// ===== TAB SWITCHING =====
+function switchTab(e, tabName) {
+  e.preventDefault();
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById(tabName).classList.add('active');
+}
+
+// ===== SEARCH ENGINE HANDLING =====
+function setSearchEngine(engine) {
+  currentSearchEngine = engine;
+  document.querySelectorAll('.search-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+document.getElementById('searchGoogle').addEventListener('click', (e) => { setSearchEngine('google'); });
+document.getElementById('searchDuckDuckGo').addEventListener('click', (e) => { setSearchEngine('duckduckgo'); });
+document.getElementById('searchBing').addEventListener('click', (e) => { setSearchEngine('bing'); });
+document.getElementById('searchYandex').addEventListener('click', (e) => { setSearchEngine('yandex'); });
 
 // ===== CLOAK FUNCTIONALITY =====
 function toggleCloak() {
@@ -874,12 +1045,9 @@ function recordRequest(duration, success = true) {
 // ===== OPTIMIZED HTML COMPRESSION =====
 function compressHtml(html) {
   const original = html.length;
-  // Remove comments
   html = html.replace(/<!--[\s\S]*?-->/g, '');
-  // Collapse whitespace
   html = html.replace(/>\s+</g, '><');
   html = html.replace(/\s{2,}/g, ' ');
-  // Remove empty attributes
   html = html.replace(/\s+(?=>)/g, '');
   const compressed = html.length;
   const saved = original - compressed;
@@ -993,182 +1161,156 @@ async function loadWithFetch(url, urlConfig) {
   const timeout = setTimeout(() => controller.abort(), settings.timeout);
   
   try {
-    const response = await fetch(urlConfig.primaryUrl, {
-      signal: controller.signal,
-      headers: { 'User-Agent': getRandomUserAgent() }
-    });
-    clearTimeout(timeout);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    
-    let content = await response.text();
-    content = rewriteHtml(content, url);
-    iframe.srcdoc = content;
-    cache.set(cacheKey, content);
-    state.currentProxyApi = settings.proxyApi;
-    recordRequest(Date.now(), true);
-    
-  } catch (err) {
-    clearTimeout(timeout);
-    if (urlConfig.fallbackUrl) {
-      addLog(`⚠️ Primary failed, trying fallback...`, 'warn');
-      return loadWithFallback(url, urlConfig);
-    }
-    throw err;
-  }
-}
-
-async function loadWithIframe(url, urlConfig) {
-  const cacheKey = url;
-  const cached = cache.get(cacheKey);
-  
-  if (cached) {
-    iframe.srcdoc = cached;
-    state.cacheHits++;
-    recordRequest(0, true);
-    addLog(`⚡ Cache hit: ${url.substring(0, 50)}...`, 'success');
-    updateStats();
-    return;
-  }
-  
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), settings.timeout);
-  
-  try {
     const start = Date.now();
     const response = await fetch(urlConfig.primaryUrl, {
       signal: controller.signal,
       headers: { 'User-Agent': getRandomUserAgent() }
     });
     clearTimeout(timeout);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     
-    let html = await response.text();
-    html = rewriteHtml(html, url);
-    iframe.srcdoc = html;
-    cache.set(cacheKey, html);
-    state.currentProxyApi = settings.proxyApi;
-    recordRequest(Date.now() - start, true);
+    const html = await response.text();
+    const processed = rewriteHtml(html, url);
+    cache.set(cacheKey, processed);
+    iframe.srcdoc = processed;
     
+    const duration = Date.now() - start;
+    recordRequest(duration, true);
+    addLog(`✓ Loaded: ${url.substring(0, 60)}... (${duration}ms)`, 'success');
   } catch (err) {
     clearTimeout(timeout);
+    recordRequest(0, false);
+    addLog(`✗ Error: ${err.message}`, 'error');
+    
     if (urlConfig.fallbackUrl) {
-      addLog(`⚠️ Primary failed, trying fallback...`, 'warn');
-      return loadWithFallback(url, urlConfig);
+      addLog('🔄 Trying fallback proxy...', 'info');
+      try {
+        const response = await fetch(urlConfig.fallbackUrl, {
+          headers: { 'User-Agent': getRandomUserAgent() }
+        });
+        const html = await response.text();
+        const processed = rewriteHtml(html, url);
+        cache.set(cacheKey, processed);
+        iframe.srcdoc = processed;
+        addLog(`✓ Fallback successful: ${url.substring(0, 60)}...`, 'success');
+      } catch (fallbackErr) {
+        addLog(`✗ Fallback failed: ${fallbackErr.message}`, 'error');
+      }
     }
-    throw err;
   }
 }
 
-async function loadWithFallback(url, urlConfig) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), settings.timeout);
+// ===== VALIDATE AND ROUTE INPUT =====
+function processInput(input) {
+  input = input.trim();
   
-  try {
-    const start = Date.now();
-    const response = await fetch(urlConfig.fallbackUrl, {
-      signal: controller.signal,
-      headers: { 'User-Agent': getRandomUserAgent() }
-    });
-    clearTimeout(timeout);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    
-    let html = await response.text();
-    html = rewriteHtml(html, url);
-    iframe.srcdoc = html;
-    state.currentProxyApi = urlConfig.fallbackApi;
-    recordRequest(Date.now() - start, true);
-    addLog(`✓ Fallback success: ${urlConfig.fallbackApi}`, 'success');
-    
-  } catch (err) {
-    clearTimeout(timeout);
-    throw err;
-  }
-}
-
-// ===== REQUEST HANDLER =====
-async function handleGo() {
-  const input = urlInput.value.trim();
   if (!input) {
-    feedback.textContent = '⚠️ Enter a URL';
-    feedback.className = 'error';
-    return;
+    showFeedback('Please enter a URL or search term', 'error');
+    return null;
   }
   
-  let targetUrl;
-  if (input.toLowerCase() === 'about:blank') {
-    toggleCloak();
-    return;
-  } else if (input.startsWith('http://') || input.startsWith('https://')) {
-    targetUrl = input;
-  } else if (input.includes('.')) {
-    targetUrl = 'https://' + input;
-  } else {
-    targetUrl = `https://www.google.com/search?q=${encodeURIComponent(input)}`;
+  // Check if it's a URL
+  if (input.startsWith('http://') || input.startsWith('https://') || input.includes('.')) {
+    try {
+      new URL(input.startsWith('http') ? input : `https://${input}`);
+      return input.startsWith('http') ? input : `https://${input}`;
+    } catch {
+      // Not a valid URL, treat as search
+    }
   }
   
-  state.currentUrl = targetUrl;
+  // It's a search query
+  const searchUrl = SEARCH_ENGINES[currentSearchEngine](input);
+  addLog(`🔍 Searching with ${currentSearchEngine}: ${input}`, 'info');
+  return searchUrl;
+}
+
+// ===== MAIN LOADING FUNCTION =====
+async function loadUrl(urlToLoad) {
+  urlToLoad = processInput(urlToLoad);
+  if (!urlToLoad) return;
+  
+  state.currentUrl = urlToLoad;
   loadingOverlay.style.display = 'flex';
-  feedback.textContent = '🔄 Loading...';
+  feedback.textContent = 'Loading...';
   feedback.className = 'info';
   
-  try {
-    const start = Date.now();
-    const urlConfig = await buildProxyUrlWithFallback(targetUrl);
-    
-    if (settings.proxyMethod === 'fetch') {
-      await loadWithFetch(targetUrl, urlConfig);
-    } else {
-      await loadWithIframe(targetUrl, urlConfig);
-    }
-    
-    const elapsed = Date.now() - start;
-    loadingOverlay.style.display = 'none';
-    feedback.textContent = `✅ Loaded in ${elapsed}ms via ${state.currentProxyApi}`;
-    feedback.className = 'valid';
-    
-  } catch (err) {
-    recordRequest(0, false);
-    loadingOverlay.style.display = 'none';
-    feedback.textContent = `❌ Error: ${err.message}`;
-    feedback.className = 'error';
-    addLog(`❌ Failed: ${err.message}`, 'error');
-  }
+  const urlConfig = await buildProxyUrlWithFallback(urlToLoad);
+  await loadWithFetch(urlToLoad, urlConfig);
+  
+  loadingOverlay.style.display = 'none';
+  feedback.textContent = 'Loaded successfully!';
+  feedback.className = 'valid';
+  setTimeout(() => feedback.textContent = '', 3000);
 }
 
-goBtn.addEventListener('click', handleGo);
+// ===== FEEDBACK DISPLAY =====
+function showFeedback(msg, type) {
+  feedback.textContent = msg;
+  feedback.className = type;
+  setTimeout(() => feedback.textContent = '', 3000);
+}
+
+// ===== EVENT LISTENERS =====
+goBtn.addEventListener('click', () => loadUrl(urlInput.value));
 urlInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') handleGo();
+  if (e.key === 'Enter') loadUrl(urlInput.value);
 });
 
-// ===== SETTINGS =====
-document.getElementById('toggleAdvanced')?.addEventListener('change', () => {
-  document.getElementById('advancedPanel').classList.toggle('show');
+toggleAdvanced.addEventListener('change', () => {
+  advancedPanel.classList.toggle('show');
 });
 
-document.getElementById('applySettings')?.addEventListener('click', () => {
+// Apply Settings
+document.getElementById('applySettings').addEventListener('click', () => {
   settings.proxyMethod = document.getElementById('proxyMethod').value;
   settings.proxyApi = document.getElementById('proxyApi').value;
   settings.fallbackApi = document.getElementById('fallbackApi').value;
   settings.userAgent = document.getElementById('userAgent').value;
   settings.linkRewrite = document.getElementById('linkRewrite').value;
   settings.timeout = parseInt(document.getElementById('timeout').value);
-  addLog('✅ Settings applied', 'success');
+  settings.dohProvider = document.getElementById('dohProvider').value;
+  settings.responseFilter = document.getElementById('responseFilter').value;
+  settings.requestLimit = parseInt(document.getElementById('requestLimit').value);
+  
+  addLog('✓ Settings applied successfully', 'success');
+  showFeedback('Settings updated!', 'valid');
 });
 
-document.getElementById('clearCache')?.addEventListener('click', () => {
+// Clear Cache
+document.getElementById('clearCache').addEventListener('click', () => {
   cache.clear();
-  state.cacheHits = 0;
-  updateStats();
-  addLog('🗑️ Cache cleared', 'success');
+  addLog('🗑️ Cache cleared', 'info');
+  showFeedback('Cache cleared!', 'valid');
 });
 
-document.getElementById('testProxy')?.addEventListener('click', () => {
+// Test Proxy
+document.getElementById('testProxy').addEventListener('click', () => {
   testAllProxies();
 });
 
+// Clear Logs
+document.getElementById('clearLogs').addEventListener('click', () => {
+  logsContainer.innerHTML = '';
+  addLog('[SYSTEM] Logs cleared', 'info');
+});
+
+// Download Logs
+document.getElementById('downloadLogs').addEventListener('click', () => {
+  const logs = Array.from(logsContainer.children).map(el => el.textContent).join('\n');
+  const blob = new Blob([logs], { type: 'text/plain' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'proxy-logs-' + Date.now() + '.txt';
+  a.click();
+  window.URL.revokeObjectURL(url);
+});
+
 // Initialize
-updateStats();
-testAllProxies();
+window.addEventListener('load', () => {
+  testAllProxies();
+  addLog('✓ Advanced Proxy Engine v8.0 ready', 'success');
+});
 </script>
 
 </body>
