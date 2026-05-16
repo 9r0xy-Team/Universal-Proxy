@@ -3,18 +3,31 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Universal Proxy · Pro Edition v9.0 - Universal Compatibility</title>
+<title>Universal Proxy · Pro Edition v10.0 - Next Generation</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
+
+:root {
+  --primary: #c084fc;
+  --secondary: #f87171;
+  --accent: #86efac;
+  --dark-bg: #0f0720;
+  --card-bg: rgba(45, 27, 78, 0.6);
+  --border: rgba(200, 132, 252, 0.3);
+  --text-light: #e0d5eb;
+  --text-dim: #b8a8d1;
+}
+
 body {
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: linear-gradient(135deg, #1a0f2e 0%, #2d1b4e 25%, #3d2a4a 50%, #4a1f2e 75%, #3d1a24 100%);
-  color: #e0d5eb;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #0f0720 0%, #1a0f2e 25%, #2d1b4e 50%, #3d2a4a 75%, #2d1a35 100%);
+  background-attachment: fixed;
+  color: var(--text-light);
   min-height: 100vh;
   display: flex; 
   flex-direction: column;
-  will-change: auto;
+  overflow-x: hidden;
 }
 
 body.cloaked {
@@ -29,6 +42,27 @@ body.cloaked .card,
 body.cloaked nav,
 body.cloaked button {
   display: none !important;
+}
+
+/* ===== ANIMATED BACKGROUND ===== */
+.bg-animation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(192, 132, 252, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(248, 113, 113, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 0%, rgba(134, 239, 172, 0.05) 0%, transparent 50%);
+  animation: bgShift 15s ease-in-out infinite;
+}
+
+@keyframes bgShift {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(20px, -10px); }
+  66% { transform: translate(-15px, 20px); }
 }
 
 .cloak-overlay {
@@ -73,11 +107,6 @@ body.cloaked button {
   margin-top: 30px;
 }
 
-.cloak-overlay p {
-  margin: 10px 0;
-  font-size: 1rem;
-}
-
 .cloak-exit-key {
   position: fixed;
   bottom: 10px;
@@ -89,273 +118,384 @@ body.cloaked button {
 }
 
 header {
-  background: linear-gradient(90deg, rgba(74, 31, 46, 0.8), rgba(61, 42, 74, 0.8));
-  padding: 1rem 1.5rem;
+  background: linear-gradient(90deg, rgba(15, 7, 32, 0.9), rgba(45, 27, 78, 0.9));
+  padding: 1.25rem 2rem;
   display: flex; 
   align-items: center; 
   justify-content: space-between;
   border-bottom: 2px solid;
-  border-image: linear-gradient(90deg, #c084fc, #f87171) 1;
-  backdrop-filter: blur(10px);
-  will-change: transform;
-  contain: layout;
+  border-image: linear-gradient(90deg, #c084fc, #f87171, #86efac) 1;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 header h1 { 
-  font-size: 1.4rem; 
-  font-weight: 700; 
+  font-size: 1.6rem; 
+  font-weight: 800; 
   display: flex; 
   align-items: center; 
-  gap: 0.8rem;
-  background: linear-gradient(135deg, #c084fc, #f87171);
+  gap: 1rem;
+  background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  letter-spacing: -0.5px;
+}
+
+header h1 span {
+  font-size: 2rem;
+  animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+nav { 
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+  margin-right: 2rem;
 }
 
 nav a { 
-  color: #d8bfd8; 
+  color: var(--text-light); 
   text-decoration: none; 
-  margin-left: 1.5rem; 
   font-size: 0.95rem; 
-  transition: all 0.2s;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
 }
 
-nav a:hover { 
-  color: #f87171;
-  text-shadow: 0 0 10px rgba(248, 113, 113, 0.5);
+nav a::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  transition: all 0.3s;
+  transform: translateX(-50%);
+}
+
+nav a:hover {
+  color: var(--secondary);
+  background: rgba(248, 113, 113, 0.1);
+}
+
+nav a:hover::before {
+  width: 100%;
 }
 
 .cloak-btn {
-  background: linear-gradient(135deg, #86efac, #10b981);
+  background: linear-gradient(135deg, var(--accent), #10b981);
   color: #fff;
   border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
+  padding: 0.7rem 1.5rem;
+  border-radius: 12px;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
-  margin-left: auto;
-  margin-right: 1rem;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 15px rgba(134, 239, 172, 0.3);
 }
 
 .cloak-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(134, 239, 172, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(134, 239, 172, 0.5);
 }
 
 .cloak-btn.uncloak {
-  background: linear-gradient(135deg, #f87171, #c084fc);
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
 }
 
 .container { 
   flex: 1; 
-  padding: 2rem; 
-  max-width: 1400px; 
+  padding: 2.5rem; 
+  max-width: 1600px; 
   margin: 0 auto; 
   width: 100%;
   contain: layout;
 }
 
 .card {
-  background: rgba(45, 27, 78, 0.6); 
-  backdrop-filter: blur(12px);
-  border-radius: 16px; 
-  padding: 1.5rem;
-  margin-bottom: 1.5rem; 
-  border: 1px solid rgba(200, 132, 252, 0.3);
-  box-shadow: 0 8px 32px rgba(74, 31, 46, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  transition: all 0.2s ease;
-  contain: content;
+  background: var(--card-bg); 
+  backdrop-filter: blur(20px);
+  border-radius: 20px; 
+  padding: 2rem;
+  margin-bottom: 2rem; 
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.1) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .card:hover {
-  border-color: rgba(248, 113, 113, 0.3);
-  box-shadow: 0 12px 40px rgba(248, 113, 113, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-color: rgba(248, 113, 113, 0.5);
+  box-shadow: 0 16px 48px rgba(248, 113, 113, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
 }
 
 .card-title { 
-  font-size: 1.1rem; 
-  font-weight: 700; 
-  margin-bottom: 1rem; 
+  font-size: 1.3rem; 
+  font-weight: 800; 
+  margin-bottom: 1.5rem; 
   color: #f5f3ff; 
   display: flex; 
   align-items: center; 
-  gap: 0.7rem;
-  background: linear-gradient(90deg, #c084fc, #f87171);
+  gap: 0.8rem;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  position: relative;
+  z-index: 1;
 }
 
 .input-group { 
   display: flex; 
-  gap: 0.8rem; 
+  gap: 1rem; 
   flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
 }
 
 .input-group input {
   flex: 1; 
-  min-width: 220px; 
-  padding: 0.85rem 1.2rem; 
-  border: 2px solid rgba(200, 132, 252, 0.3); 
-  border-radius: 10px;
+  min-width: 250px; 
+  padding: 1rem 1.5rem; 
+  border: 2px solid var(--border); 
+  border-radius: 14px;
   background: rgba(26, 15, 46, 0.8); 
-  color: #e0d5eb; 
+  color: var(--text-light); 
   font-size: 0.95rem; 
   outline: none; 
-  transition: all 0.2s;
+  transition: all 0.3s;
+  font-weight: 500;
 }
 
 .input-group input:focus { 
-  border-color: #f87171; 
+  border-color: var(--secondary); 
   background: rgba(26, 15, 46, 1);
-  box-shadow: 0 0 15px rgba(248, 113, 113, 0.4), inset 0 0 8px rgba(248, 113, 113, 0.1);
+  box-shadow: 0 0 20px rgba(248, 113, 113, 0.4), inset 0 0 8px rgba(248, 113, 113, 0.1);
 }
 
 .input-group input::placeholder { 
-  color: #9d8fb3; 
+  color: var(--text-dim); 
 }
 
 .input-group button {
-  padding: 0.85rem 1.8rem; 
-  background: linear-gradient(135deg, #c084fc, #f87171); 
+  padding: 1rem 2.5rem; 
+  background: linear-gradient(135deg, var(--primary), var(--secondary)); 
   color: #fff; 
   border: none; 
-  border-radius: 10px;
-  font-weight: 700; 
+  border-radius: 14px;
+  font-weight: 800; 
   cursor: pointer; 
-  transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(248, 113, 113, 0.3);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 6px 20px rgba(248, 113, 113, 0.4);
+  font-size: 1rem;
+  letter-spacing: 0.5px;
 }
 
 .input-group button:hover:not(:disabled) { 
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(248, 113, 113, 0.5);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(248, 113, 113, 0.6);
 }
 
 .input-group button:disabled { 
   background: linear-gradient(135deg, #6b5b95, #8b7b9a);
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .search-buttons {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.8rem;
   flex-wrap: wrap;
-  margin-top: 0.8rem;
+  margin-top: 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 .search-btn {
-  padding: 0.6rem 1rem;
+  padding: 0.8rem 1.5rem;
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.85rem;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   flex: 1;
   min-width: 100px;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+}
+
+.search-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: left 0.3s;
 }
 
 .search-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+}
+
+.search-btn:hover::before {
+  left: 100%;
 }
 
 .search-btn.active {
-  background: linear-gradient(135deg, #f87171, #c084fc);
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(248, 113, 113, 0.5);
 }
 
 #feedback { 
-  font-size: 0.9rem; 
-  margin-top: 0.6rem; 
-  min-height: 1.4em;
-  font-weight: 500;
+  font-size: 1rem; 
+  margin-top: 1rem; 
+  min-height: 1.5em;
+  font-weight: 600;
+  animation: fadeIn 0.3s ease;
 }
 
 #feedback.valid { 
-  color: #86efac;
-  text-shadow: 0 0 8px rgba(134, 239, 172, 0.4);
+  color: var(--accent);
+  text-shadow: 0 0 10px rgba(134, 239, 172, 0.6);
 }
 
 #feedback.info { 
-  color: #c084fc;
-  text-shadow: 0 0 8px rgba(192, 132, 252, 0.4);
+  color: var(--primary);
+  text-shadow: 0 0 10px rgba(192, 132, 252, 0.6);
 }
 
 #feedback.error { 
-  color: #f87171;
-  text-shadow: 0 0 8px rgba(248, 113, 113, 0.4);
+  color: var(--secondary);
+  text-shadow: 0 0 10px rgba(248, 113, 113, 0.6);
 }
 
-.stats-row { 
-  display: flex; 
-  gap: 1rem; 
-  flex-wrap: wrap; 
-  justify-content: space-between;
-  contain: layout;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.stats-grid { 
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 .stat-item {
   background: linear-gradient(135deg, rgba(74, 31, 46, 0.4), rgba(61, 42, 74, 0.4)); 
-  padding: 1.2rem; 
-  border-radius: 12px; 
-  border: 1px solid rgba(200, 132, 252, 0.2);
-  flex: 1; 
-  min-width: 120px; 
+  padding: 1.8rem; 
+  border-radius: 16px; 
+  border: 2px solid var(--border);
   text-align: center; 
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   cursor: pointer;
-  contain: content;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(192, 132, 252, 0.2), transparent);
+  transition: left 0.5s;
 }
 
 .stat-item:hover { 
-  border-color: rgba(248, 113, 113, 0.5);
-  background: linear-gradient(135deg, rgba(74, 31, 46, 0.6), rgba(61, 42, 74, 0.6));
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(248, 113, 113, 0.2);
+  border-color: rgba(248, 113, 113, 0.8);
+  background: linear-gradient(135deg, rgba(74, 31, 46, 0.8), rgba(61, 42, 74, 0.8));
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(248, 113, 113, 0.3);
+}
+
+.stat-item:hover::before {
+  left: 100%;
 }
 
 .stat-item .value { 
-  font-size: 1.8rem; 
-  font-weight: 800; 
-  background: linear-gradient(90deg, #c084fc, #f87171);
+  font-size: 2.2rem; 
+  font-weight: 900; 
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  letter-spacing: -1px;
 }
 
 .stat-item .label { 
-  font-size: 0.8rem; 
-  color: #b8a8d1; 
-  margin-top: 0.4rem; 
+  font-size: 0.85rem; 
+  color: var(--text-dim); 
+  margin-top: 0.6rem; 
   text-transform: uppercase; 
-  letter-spacing: 0.7px;
-  font-weight: 600;
+  letter-spacing: 1px;
+  font-weight: 700;
 }
 
 .settings-grid { 
   display: grid; 
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
-  gap: 1.2rem;
-  contain: layout;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
+  gap: 1.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 .setting-item { 
   display: flex; 
   flex-direction: column; 
-  gap: 0.4rem;
+  gap: 0.6rem;
+  padding: 1rem;
+  background: rgba(26, 15, 46, 0.4);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  transition: all 0.3s;
+}
+
+.setting-item:hover {
+  border-color: rgba(248, 113, 113, 0.4);
+  background: rgba(26, 15, 46, 0.6);
 }
 
 .setting-item label { 
-  font-size: 0.85rem; 
-  color: #d8bfd8; 
-  font-weight: 600;
+  font-size: 0.9rem; 
+  color: var(--text-light); 
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -363,75 +503,84 @@ nav a:hover {
 .setting-item input, 
 .setting-item select,
 .setting-item textarea {
-  padding: 0.7rem; 
-  border: 1px solid rgba(200, 132, 252, 0.3); 
-  border-radius: 8px; 
-  background: rgba(26, 15, 46, 0.8); 
-  color: #e0d5eb; 
+  padding: 0.9rem; 
+  border: 2px solid var(--border); 
+  border-radius: 10px; 
+  background: rgba(26, 15, 46, 0.9); 
+  color: var(--text-light); 
   font-size: 0.9rem; 
   outline: none;
-  transition: all 0.2s;
+  transition: all 0.3s;
+  font-weight: 500;
 }
 
 .setting-item input:focus,
 .setting-item select:focus,
 .setting-item textarea:focus {
-  border-color: #f87171;
+  border-color: var(--secondary);
   background: rgba(26, 15, 46, 1);
-  box-shadow: 0 0 10px rgba(248, 113, 113, 0.3);
+  box-shadow: 0 0 15px rgba(248, 113, 113, 0.4);
 }
 
 .setting-item button { 
-  padding: 0.7rem 1rem; 
-  background: linear-gradient(135deg, #c084fc, #f87171); 
+  padding: 0.9rem 1.5rem; 
+  background: linear-gradient(135deg, var(--primary), var(--secondary)); 
   color: #fff; 
   border: none; 
-  border-radius: 8px; 
+  border-radius: 10px; 
   cursor: pointer; 
-  transition: all 0.2s;
-  font-weight: 600;
-  font-size: 0.85rem;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(248, 113, 113, 0.3);
 }
 
 .setting-item button:hover { 
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(248, 113, 113, 0.4);
+  box-shadow: 0 8px 20px rgba(248, 113, 113, 0.5);
 }
 
 .logs-box {
-  background: rgba(10, 5, 20, 0.9); 
-  border: 1px solid rgba(200, 132, 252, 0.2); 
-  border-radius: 10px; 
-  padding: 0.8rem;
-  max-height: 300px; 
+  background: rgba(10, 5, 20, 0.95); 
+  border: 2px solid var(--border); 
+  border-radius: 14px; 
+  padding: 1.2rem;
+  max-height: 400px; 
   overflow-y: auto; 
-  font-family: 'Cascadia Code', 'Fira Code', monospace; 
-  font-size: 0.8rem; 
-  color: #b8a8d1;
-  contain: layout;
+  font-family: 'Fira Code', 'Cascadia Code', monospace; 
+  font-size: 0.85rem; 
+  color: var(--text-dim);
+  position: relative;
+  z-index: 1;
 }
 
 .logs-box .log-entry { 
-  margin-bottom: 0.3rem; 
-  padding: 0.15rem 0.5rem; 
-  border-left: 2px solid transparent;
-  border-bottom: 1px solid rgba(200, 132, 252, 0.1);
+  margin-bottom: 0.5rem; 
+  padding: 0.6rem 1rem; 
+  border-left: 3px solid transparent;
+  border-radius: 4px;
+  transition: all 0.2s;
 }
 
-.logs-box .log-entry.info { border-left-color: #c084fc; }
-.logs-box .log-entry.success { border-left-color: #86efac; }
-.logs-box .log-entry.warn { border-left-color: #fbbf24; }
-.logs-box .log-entry.error { border-left-color: #f87171; }
+.logs-box .log-entry:hover {
+  background: rgba(192, 132, 252, 0.1);
+}
+
+.logs-box .log-entry.info { border-left-color: var(--primary); color: var(--primary); }
+.logs-box .log-entry.success { border-left-color: var(--accent); color: var(--accent); }
+.logs-box .log-entry.warn { border-left-color: #fbbf24; color: #fbbf24; }
+.logs-box .log-entry.error { border-left-color: var(--secondary); color: var(--secondary); }
 
 .iframe-wrapper {
   width: 100%; 
-  height: 70vh; 
-  border: 1px solid rgba(200, 132, 252, 0.3); 
-  border-radius: 14px; 
+  height: 75vh; 
+  border: 2px solid var(--border); 
+  border-radius: 18px; 
   overflow: hidden;
   position: relative; 
-  background: rgba(10, 5, 20, 0.9); 
-  box-shadow: inset 0 0 30px rgba(74, 31, 46, 0.3), 0 8px 32px rgba(248, 113, 113, 0.1);
+  background: rgba(10, 5, 20, 0.95); 
+  box-shadow: inset 0 0 40px rgba(74, 31, 46, 0.4), 0 12px 40px rgba(248, 113, 113, 0.15);
   contain: layout;
 }
 
@@ -448,71 +597,69 @@ iframe {
   left: 0; 
   right: 0; 
   bottom: 0;
-  background: linear-gradient(135deg, rgba(26, 15, 46, 0.95), rgba(74, 31, 46, 0.95));
+  background: linear-gradient(135deg, rgba(15, 7, 32, 0.98), rgba(74, 31, 46, 0.98));
   display: flex; 
   align-items: center; 
   justify-content: center;
-  color: #c084fc; 
+  color: var(--primary); 
   font-size: 1.3rem; 
-  display: none; 
   z-index: 10; 
   flex-direction: column; 
-  gap: 1.5rem;
-  backdrop-filter: blur(8px);
-  contain: layout;
+  gap: 2rem;
+  backdrop-filter: blur(10px);
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .loading-overlay .spinner {
-  width: 50px; 
-  height: 50px; 
-  border: 4px solid rgba(200, 132, 252, 0.3);
-  border-top: 4px solid #f87171;
-  border-right: 4px solid #c084fc;
+  width: 60px; 
+  height: 60px; 
+  border: 4px solid var(--border);
+  border-top: 4px solid var(--secondary);
+  border-right: 4px solid var(--primary);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  will-change: transform;
-}
-
-@keyframes spin { 
-  to { transform: rotate(360deg); }
+  animation: spin 1.2s linear infinite;
 }
 
 .footer {
-  background: linear-gradient(90deg, rgba(74, 31, 46, 0.6), rgba(61, 42, 74, 0.6));
-  padding: 1rem 1.5rem; 
+  background: linear-gradient(90deg, rgba(15, 7, 32, 0.9), rgba(45, 27, 78, 0.9));
+  padding: 1.5rem 2rem; 
   text-align: center; 
-  border-top: 1px solid rgba(200, 132, 252, 0.2);
-  font-size: 0.85rem; 
-  color: #b8a8d1;
+  border-top: 2px solid var(--border);
+  font-size: 0.9rem; 
+  color: var(--text-dim);
   backdrop-filter: blur(10px);
-  contain: layout;
+  font-weight: 600;
 }
 
 .advanced-toggle { 
   display: flex; 
-  gap: 0.8rem; 
+  gap: 1rem; 
   align-items: center; 
   cursor: pointer; 
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(200, 132, 252, 0.2);
-  transition: all 0.2s;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--border);
+  transition: all 0.3s;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
 }
 
 .advanced-toggle:hover {
-  color: #f87171;
+  color: var(--secondary);
 }
 
 .advanced-toggle input[type="checkbox"] { 
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
-  accent-color: #f87171;
+  accent-color: var(--secondary);
 }
 
 .hidden-panel { 
   display: none;
-  animation: slideDown 0.2s ease-out;
+  animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .hidden-panel.show { 
@@ -522,7 +669,7 @@ iframe {
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-20px);
   }
   to {
     opacity: 1;
@@ -532,79 +679,167 @@ iframe {
 
 .proxy-status {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.8rem;
   flex-wrap: wrap;
-  margin-bottom: 1rem;
+  margin: 1.5rem 0;
+  position: relative;
+  z-index: 1;
 }
 
 .status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.8rem;
+  gap: 0.6rem;
+  padding: 0.6rem 1.2rem;
   background: rgba(26, 15, 46, 0.8);
-  border: 1px solid rgba(200, 132, 252, 0.3);
-  border-radius: 6px;
-  font-size: 0.8rem;
-  color: #d8bfd8;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  font-weight: 600;
+  transition: all 0.3s;
 }
 
 .status-badge.healthy {
-  border-color: rgba(134, 239, 172, 0.5);
-  color: #86efac;
+  border-color: rgba(134, 239, 172, 0.8);
+  color: var(--accent);
+  background: rgba(134, 239, 172, 0.1);
 }
 
 .status-badge.unhealthy {
-  border-color: rgba(248, 113, 113, 0.5);
-  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.8);
+  color: var(--secondary);
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.status-badge::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .tabs {
   display: flex;
-  gap: 0.5rem;
-  border-bottom: 2px solid rgba(200, 132, 252, 0.2);
-  margin-bottom: 1rem;
+  gap: 0.8rem;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .tab-btn {
-  padding: 0.7rem 1.2rem;
+  padding: 1rem 1.5rem;
   background: transparent;
-  color: #d8bfd8;
+  color: var(--text-light);
   border: none;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-  font-weight: 600;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  position: relative;
+}
+
+.tab-btn::before {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  transition: width 0.3s;
 }
 
 .tab-btn:hover {
-  color: #f87171;
+  color: var(--secondary);
 }
 
 .tab-btn.active {
-  color: #f87171;
-  border-bottom-color: #f87171;
+  color: var(--secondary);
+}
+
+.tab-btn.active::before {
+  width: 100%;
 }
 
 .tab-content {
   display: none;
+  animation: fadeIn 0.3s ease;
 }
 
 .tab-content.active {
   display: block;
 }
 
+@media (max-width: 1024px) {
+  .container { padding: 1.5rem; }
+  .card { padding: 1.5rem; margin-bottom: 1.5rem; }
+  header { padding: 1rem 1.5rem; }
+  header h1 { font-size: 1.3rem; }
+  nav { margin-right: 1rem; }
+}
+
 @media (max-width: 768px) {
   .container { padding: 1rem; }
-  .card { padding: 1rem; margin-bottom: 1rem; }
+  .card { padding: 1.2rem; margin-bottom: 1.2rem; }
   header { padding: 0.75rem 1rem; }
-  .stats-row { gap: 0.5rem; }
-  .stat-item { min-width: 100px; padding: 0.8rem; }
+  header h1 { font-size: 1.1rem; gap: 0.5rem; }
+  header h1 span { font-size: 1.5rem; }
+  nav { gap: 0.2rem; margin-right: 0.5rem; }
+  nav a { font-size: 0.8rem; padding: 0.4rem 0.8rem; margin-left: 0.5rem; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
   .settings-grid { grid-template-columns: 1fr; }
+  .iframe-wrapper { height: 50vh; }
+  .input-group { flex-direction: column; }
+  .input-group input { min-width: 100%; }
+  .search-buttons { gap: 0.5rem; }
+  .search-btn { min-width: 80px; font-size: 0.75rem; padding: 0.6rem 1rem; }
+}
+
+@media (max-width: 480px) {
+  header h1 { font-size: 0.9rem; gap: 0.3rem; }
+  header h1 span { font-size: 1.2rem; }
+  .card-title { font-size: 1rem; }
+  .stat-item .value { font-size: 1.8rem; }
+  .container { padding: 0.75rem; }
+  .card { padding: 1rem; margin-bottom: 1rem; }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(26, 15, 46, 0.5);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--primary), var(--secondary));
+  border-radius: 10px;
+  transition: all 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--secondary), var(--primary));
 }
 </style>
 </head>
 <body>
+
+<div class="bg-animation"></div>
 
 <div class="cloak-overlay" id="cloakOverlay">
   <div class="title-bar">about:blank</div>
@@ -616,7 +851,7 @@ iframe {
 </div>
 
 <header>
-  <h1><span>⭐</span> Universal Proxy Pro v9.0</h1>
+  <h1><span>⭐</span> Universal Proxy Pro</h1>
   <button class="cloak-btn" id="cloakBtn" title="Cloak tab to about:blank">🔒 Cloak Tab</button>
   <nav>
     <a href="#" onclick="showDashboard(event)">Dashboard</a>
@@ -628,8 +863,8 @@ iframe {
   <div class="card">
     <div class="card-title">🌐 Enter URL or Search Query</div>
     <div class="input-group">
-      <input type="text" id="urlInput" placeholder="https://example.com, youtube.com, twitter.com, etc" autocomplete="off" spellcheck="false">
-      <button id="goBtn" title="Load URL (Enter)">Go</button>
+      <input type="text" id="urlInput" placeholder="https://example.com, youtube.com, twitter.com, reddit.com..." autocomplete="off" spellcheck="false">
+      <button id="goBtn" title="Load URL (Enter)">Launch</button>
     </div>
     <div class="search-buttons">
       <button class="search-btn active" id="searchGoogle" title="Search using Google">Google</button>
@@ -640,17 +875,17 @@ iframe {
     <div id="feedback"></div>
     <div class="proxy-status" id="proxyStatus"></div>
     <div class="advanced-toggle">
-      <label>⚙️ Advanced options</label>
+      <label>⚙️ Advanced Options</label>
       <input type="checkbox" id="toggleAdvanced">
     </div>
   </div>
 
   <div class="card hidden-panel" id="advancedPanel">
     <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab(event, 'proxy-settings')">Proxy Settings</button>
-      <button class="tab-btn" onclick="switchTab(event, 'advanced-security')">Security</button>
-      <button class="tab-btn" onclick="switchTab(event, 'url-compat')">URL Compatibility</button>
-      <button class="tab-btn" onclick="switchTab(event, 'logs-tab')">Logs</button>
+      <button class="tab-btn active" onclick="switchTab(event, 'proxy-settings')">⚡ Proxy</button>
+      <button class="tab-btn" onclick="switchTab(event, 'advanced-security')">🔐 Security</button>
+      <button class="tab-btn" onclick="switchTab(event, 'url-compat')">🌍 Compatibility</button>
+      <button class="tab-btn" onclick="switchTab(event, 'logs-tab')">📜 Logs</button>
     </div>
 
     <div id="proxy-settings" class="tab-content active">
@@ -702,8 +937,8 @@ iframe {
           <label>Request Timeout (ms)</label>
           <input type="number" id="timeout" value="15000" min="3000" max="60000" step="1000">
         </div>
-        <div class="setting-item" style="grid-column: span 3; display: flex; gap: 0.5rem;">
-          <button id="applySettings">Apply</button>
+        <div class="setting-item" style="grid-column: span 3; display: flex; gap: 1rem;">
+          <button id="applySettings">Apply Changes</button>
           <button id="clearCache">Clear Cache</button>
           <button id="testProxy">Test Proxy</button>
         </div>
@@ -733,17 +968,17 @@ iframe {
         <div class="setting-item">
           <label>Enable JavaScript</label>
           <input type="checkbox" id="enableJS" checked>
-          <span style="font-size: 0.75rem; color: #9d8fb3;">Allow JS execution</span>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">Allow JS execution</span>
         </div>
         <div class="setting-item">
           <label>Strip Headers</label>
           <input type="checkbox" id="stripHeaders" checked>
-          <span style="font-size: 0.75rem; color: #9d8fb3;">Remove tracking headers</span>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">Remove tracking headers</span>
         </div>
         <div class="setting-item">
           <label>Spoof Referrer</label>
           <input type="checkbox" id="spoofReferrer">
-          <span style="font-size: 0.75rem; color: #9d8fb3;">Hide referrer info</span>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">Hide referrer info</span>
         </div>
         <div class="setting-item">
           <label>Max Redirects</label>
@@ -758,49 +993,49 @@ iframe {
         <div class="setting-item">
           <label>Handle Subdomains</label>
           <input type="checkbox" id="handleSubdomains" checked>
-          <span style="font-size: 0.75rem; color: #9d8fb3;">Auto-process *.domain.com</span>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">Auto-process *.domain.com</span>
         </div>
         <div class="setting-item">
           <label>Stream Media</label>
           <input type="checkbox" id="streamMedia" checked>
-          <span style="font-size: 0.75rem; color: #9d8fb3;">Support video/audio URLs</span>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">Support video/audio URLs</span>
         </div>
         <div class="setting-item">
           <label>File Download</label>
           <input type="checkbox" id="allowDownload" checked>
-          <span style="font-size: 0.75rem; color: #9d8fb3;">Download .zip, .pdf, etc</span>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">Download .zip, .pdf, etc</span>
         </div>
         <div class="setting-item">
           <label>API Endpoints</label>
           <input type="checkbox" id="handleAPI" checked>
-          <span style="font-size: 0.75rem; color: #9d8fb3;">Support REST/GraphQL</span>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">Support REST/GraphQL</span>
         </div>
         <div class="setting-item">
           <label>Social Media</label>
           <input type="checkbox" id="handleSocial" checked>
-          <span style="font-size: 0.75rem; color: #9d8fb3;">Twitter, TikTok, etc</span>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">Twitter, TikTok, etc</span>
         </div>
         <div class="setting-item">
           <label>Dynamic Content</label>
           <input type="checkbox" id="handleDynamic" checked>
-          <span style="font-size: 0.75rem; color: #9d8fb3;">AJAX/SPA support</span>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">AJAX/SPA support</span>
         </div>
       </div>
     </div>
 
     <div id="logs-tab" class="tab-content">
       <div class="card-title">📜 Live Logs & Debug</div>
-      <div style="margin-bottom: 1rem;">
-        <button id="clearLogs" style="padding: 0.6rem 1rem; background: linear-gradient(135deg, #f87171, #c084fc); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Clear Logs</button>
-        <button id="downloadLogs" style="padding: 0.6rem 1rem; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-left: 0.5rem;">Download Logs</button>
+      <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem;">
+        <button id="clearLogs" style="padding: 0.8rem 1.5rem; background: linear-gradient(135deg, #f87171, #c084fc); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; flex: 1;">Clear Logs</button>
+        <button id="downloadLogs" style="padding: 0.8rem 1.5rem; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; flex: 1;">Download Logs</button>
       </div>
-      <div class="logs-box" id="logsContainer"><div class="log-entry info">[SYSTEM] Universal Proxy Pro v9.0 - Universal URL Compatibility initialized</div></div>
+      <div class="logs-box" id="logsContainer"><div class="log-entry info">[SYSTEM] Universal Proxy Pro v10.0 - Next Generation initialized</div></div>
     </div>
   </div>
 
   <div class="card">
     <div class="card-title">📊 Live Performance Metrics</div>
-    <div class="stats-row">
+    <div class="stats-grid">
       <div class="stat-item"><div class="value" id="statRequests">0</div><div class="label">Requests</div></div>
       <div class="stat-item"><div class="value" id="statCache">0</div><div class="label">Cache Hits</div></div>
       <div class="stat-item"><div class="value" id="statSpeed">0ms</div><div class="label">Avg Latency</div></div>
@@ -820,7 +1055,7 @@ iframe {
   </div>
 </div>
 
-<div class="footer">Universal Proxy Pro v9.0 · 100% URL Compatible · Advanced Rewriting · Smart Fallbacks</div>
+<div class="footer">✨ Universal Proxy Pro v10.0 · Next Generation · 100% URL Compatible · Advanced Rewriting · Smart Fallbacks</div>
 
 <script>
 // ===== SEARCH ENGINES CONFIG =====
@@ -998,277 +1233,148 @@ function parseURLAdvanced(input) {
   
   // Handle domains without protocol
   if (!input.startsWith('http://') && !input.startsWith('https://') && !input.startsWith('//')) {
-    if (input.includes('.') && !input.includes(' ')) {
-      // Add protocol for domain-like input
-      input = 'https://' + input;
+    if (input.includes(' ') || !input.includes('.')) {
+      return SEARCH_ENGINES[currentSearchEngine](input);
     }
+    input = 'https://' + input;
   }
   
   try {
-    const url = new URL(input);
-    return url.href;
-  } catch (e) {
-    return null;
+    new URL(input);
+    return input;
+  } catch {
+    return SEARCH_ENGINES[currentSearchEngine](input);
   }
 }
-
-// ===== ENHANCED HTML REWRITING =====
-function rewriteHtml(html, baseUrl) {
-  try {
-    // Remove dangerous scripts
-    html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-    
-    // Fix meta tags
-    html = html.replace(/<meta[^>]*http-equiv=["']refresh["'][^>]*>/gi, '');
-    html = html.replace(/<meta[^>]*name=["']viewport["'][^>]*>/gi, '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=10">');
-    
-    // Add CSP
-    const csp = '<meta http-equiv="Content-Security-Policy" content="default-src * data: blob: \'unsafe-inline\' \'unsafe-eval\'; upgrade-insecure-requests none;">';
-    html = html.replace(/<head[^>]*>/i, '<head>' + csp);
-    
-    // Rewrite URLs based on settings
-    if (settings.linkRewrite === 'aggressive') {
-      html = html.replace(/(href|src|action)=["']([^"']*?)["']/gi, (match, attr, url) => {
-        if (!url || url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('javascript:') || url.startsWith('#')) {
-          return match;
-        }
-        try {
-          const absolute = new URL(url, baseUrl).href;
-          const proxied = PROXY_APIS[settings.proxyApi].build(absolute);
-          return `${attr}="${proxied}"`;
-        } catch (e) {
-          return match;
-        }
-      });
-    }
-    
-    // Rewrite form actions
-    html = html.replace(/<form\b/gi, '<form target="_blank" novalidate');
-    
-    // Remove integrity checks
-    html = html.replace(/integrity=["'][^"']*["']/gi, '');
-    html = html.replace(/nonce=["'][^"']*["']/gi, '');
-    html = html.replace(/crossorigin=["']?[^"\s>]*["']?/gi, '');
-    
-    // Fix base tag
-    html = html.replace(/<base[^>]*>/gi, `<base href="${baseUrl}">`);
-    
-  } catch (e) {
-    addLog(`⚠️ HTML rewriting error: ${e.message}`, 'warn');
-  }
-  
-  return html;
-}
-
-// ===== SOPHISTICATED PROXY LOADING =====
-async function loadUrlAdvanced(urlToLoad) {
-  loadingOverlay.style.display = 'flex';
-  feedback.textContent = 'Loading...';
-  feedback.className = 'info';
-  
-  try {
-    const parsedUrl = parseURLAdvanced(urlToLoad);
-    if (!parsedUrl) {
-      // Try as search query
-      urlToLoad = SEARCH_ENGINES[currentSearchEngine](urlToLoad);
-    } else {
-      urlToLoad = parsedUrl;
-    }
-    
-    state.currentUrl = urlToLoad;
-    addLog(`📍 Loading: ${urlToLoad.substring(0, 80)}...`, 'info');
-    
-    const cacheKey = urlToLoad;
-    const cached = cache.get(cacheKey);
-    
-    if (cached) {
-      iframe.srcdoc = cached;
-      state.cacheHits++;
-      recordRequest(0, true);
-      addLog(`⚡ Cache HIT for ${new URL(urlToLoad).hostname}`, 'success');
-      loadingOverlay.style.display = 'none';
-      feedback.textContent = 'Loaded from cache!';
-      feedback.className = 'valid';
-      setTimeout(() => feedback.textContent = '', 2000);
-      return;
-    }
-    
-    // Try primary proxy
-    await fetchWithProxy(urlToLoad, settings.proxyApi, cacheKey);
-    
-  } catch (error) {
-    addLog(`❌ Critical error: ${error.message}`, 'error');
-    feedback.textContent = `Error: ${error.message}`;
-    feedback.className = 'error';
-  } finally {
-    loadingOverlay.style.display = 'none';
-  }
-}
-
-async function fetchWithProxy(url, proxyApi, cacheKey) {
-  const proxyConfig = PROXY_APIS[proxyApi];
-  if (!proxyConfig) {
-    throw new Error(`Proxy API ${proxyApi} not configured`);
-  }
-  
-  const proxyUrl = proxyConfig.build(url);
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), settings.timeout);
-  
-  try {
-    const start = Date.now();
-    
-    const response = await fetch(proxyUrl, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': settings.userAgent === 'random' ? 
-          Object.values(USER_AGENTS)[Math.floor(Math.random() * Object.keys(USER_AGENTS).length)] : 
-          USER_AGENTS[settings.userAgent] || USER_AGENTS.chrome,
-        'Accept': '*/*',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        ...(settings.spoofReferrer ? { 'Referer': 'https://www.google.com/' } : {})
-      }
-    });
-    
-    clearTimeout(timeout);
-    
-    if (!response.ok && response.status !== 200) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const contentType = response.headers.get('content-type') || '';
-    let content = await response.text();
-    
-    // Process based on content type
-    if (contentType.includes('text/html')) {
-      content = rewriteHtml(content, url);
-      iframe.srcdoc = content;
-    } else if (contentType.includes('application/json')) {
-      iframe.srcdoc = `<pre>${escapeHtml(content)}</pre>`;
-    } else if (contentType.includes('text/plain')) {
-      iframe.srcdoc = `<pre>${escapeHtml(content)}</pre>`;
-    } else {
-      iframe.srcdoc = `<iframe src="${PROXY_APIS[settings.proxyApi].build(url)}" style="width:100%;height:100%;border:none;"></iframe>`;
-    }
-    
-    cache.set(cacheKey, iframe.srcdoc);
-    const duration = Date.now() - start;
-    recordRequest(duration, true);
-    
-    const hostname = new URL(url).hostname;
-    addLog(`✅ Loaded ${hostname} in ${duration}ms`, 'success');
-    feedback.textContent = `Successfully loaded ${hostname}!`;
-    feedback.className = 'valid';
-    setTimeout(() => feedback.textContent = '', 2000);
-    
-  } catch (error) {
-    clearTimeout(timeout);
-    addLog(`⚠️ Primary proxy failed: ${error.message}`, 'warn');
-    recordRequest(0, false);
-    
-    // Try fallback
-    if (settings.fallbackApi && settings.fallbackApi !== proxyApi) {
-      addLog(`🔄 Attempting fallback: ${settings.fallbackApi}...`, 'info');
-      try {
-        await fetchWithProxy(url, settings.fallbackApi, cacheKey);
-      } catch (fallbackError) {
-        addLog(`❌ Fallback failed: ${fallbackError.message}`, 'error');
-        iframe.srcdoc = `<div style="padding:20px;color:#f87171;font-family:sans-serif;"><h2>Failed to load page</h2><p>Primary: ${error.message}</p><p>Fallback: ${fallbackError.message}</p></div>`;
-        feedback.textContent = 'Failed to load - all proxies exhausted';
-        feedback.className = 'error';
-      }
-    } else {
-      throw error;
-    }
-  }
-}
-
-function escapeHtml(text) {
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
-  return text.replace(/[&<>"']/g, m => map[m]);
-}
-
-// ===== EVENT LISTENERS =====
-goBtn.addEventListener('click', () => {
-  loadUrlAdvanced(urlInput.value);
-});
-
-urlInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') loadUrlAdvanced(urlInput.value);
-});
-
-toggleAdvanced.addEventListener('change', () => {
-  advancedPanel.classList.toggle('show');
-});
 
 // ===== TAB SWITCHING =====
-function switchTab(e, tabName) {
-  e.preventDefault();
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-  e.target.classList.add('active');
+function switchTab(event, tabName) {
+  event.preventDefault();
+  const tabs = document.querySelectorAll('.tab-content');
+  const buttons = document.querySelectorAll('.tab-btn');
+  
+  tabs.forEach(tab => tab.classList.remove('active'));
+  buttons.forEach(btn => btn.classList.remove('active'));
+  
   document.getElementById(tabName).classList.add('active');
+  event.target.classList.add('active');
 }
 
-// ===== SEARCH ENGINE SELECTION =====
-document.getElementById('searchGoogle').addEventListener('click', (e) => {
-  currentSearchEngine = 'google';
-  document.querySelectorAll('.search-btn').forEach(b => b.classList.remove('active'));
-  e.target.classList.add('active');
-});
-
-document.getElementById('searchDuckDuckGo').addEventListener('click', (e) => {
-  currentSearchEngine = 'duckduckgo';
-  document.querySelectorAll('.search-btn').forEach(b => b.classList.remove('active'));
-  e.target.classList.add('active');
-});
-
-document.getElementById('searchBing').addEventListener('click', (e) => {
-  currentSearchEngine = 'bing';
-  document.querySelectorAll('.search-btn').forEach(b => b.classList.remove('active'));
-  e.target.classList.add('active');
-});
-
-document.getElementById('searchYandex').addEventListener('click', (e) => {
-  currentSearchEngine = 'yandex';
-  document.querySelectorAll('.search-btn').forEach(b => b.classList.remove('active'));
-  e.target.classList.add('active');
-});
-
 // ===== CLOAK FUNCTIONALITY =====
-function toggleCloak() {
+cloakBtn.addEventListener('click', () => {
   state.isCloaked = !state.isCloaked;
   if (state.isCloaked) {
     cloakOverlay.classList.add('active');
     document.body.classList.add('cloaked');
-    cloakBtn.textContent = '👁️ Uncloak';
     cloakBtn.classList.add('uncloak');
-    addLog('🔒 Cloaked - Press Ctrl+Shift+C to uncloak', 'success');
+    cloakBtn.textContent = '🔓 Show Proxy';
+    addLog('Proxy cloaked successfully', 'success');
   } else {
     cloakOverlay.classList.remove('active');
     document.body.classList.remove('cloaked');
-    cloakBtn.textContent = '🔒 Cloak Tab';
     cloakBtn.classList.remove('uncloak');
-    addLog('👁️ Uncloaked', 'info');
-  }
-}
-
-cloakBtn.addEventListener('click', toggleCloak);
-document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey && e.shiftKey && e.code === 'KeyC') {
-    e.preventDefault();
-    toggleCloak();
+    cloakBtn.textContent = '🔒 Cloak Tab';
+    addLog('Proxy uncloaked', 'info');
   }
 });
 
-// ===== SETTINGS APPLICATION =====
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.shiftKey && e.code === 'KeyC') {
+    e.preventDefault();
+    cloakBtn.click();
+  }
+});
+
+// ===== ADVANCED TOGGLE =====
+toggleAdvanced.addEventListener('change', () => {
+  advancedPanel.classList.toggle('show');
+});
+
+// ===== SEARCH ENGINE BUTTONS =====
+document.getElementById('searchGoogle').addEventListener('click', () => {
+  currentSearchEngine = 'google';
+  document.querySelectorAll('.search-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('searchGoogle').classList.add('active');
+});
+
+document.getElementById('searchDuckDuckGo').addEventListener('click', () => {
+  currentSearchEngine = 'duckduckgo';
+  document.querySelectorAll('.search-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('searchDuckDuckGo').classList.add('active');
+});
+
+document.getElementById('searchBing').addEventListener('click', () => {
+  currentSearchEngine = 'bing';
+  document.querySelectorAll('.search-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('searchBing').classList.add('active');
+});
+
+document.getElementById('searchYandex').addEventListener('click', () => {
+  currentSearchEngine = 'yandex';
+  document.querySelectorAll('.search-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('searchYandex').classList.add('active');
+});
+
+// ===== GO BUTTON =====
+goBtn.addEventListener('click', () => {
+  const url = parseURLAdvanced(urlInput.value);
+  const startTime = Date.now();
+  
+  feedback.textContent = '🔄 Loading...';
+  feedback.className = 'info';
+  loadingOverlay.style.display = 'flex';
+  
+  addLog(`Attempting to proxy: ${url}`, 'info');
+  
+  const proxiedUrl = PROXY_APIS[settings.proxyApi].build(url);
+  
+  try {
+    iframe.src = proxiedUrl;
+    state.currentUrl = url;
+    
+    iframe.onload = () => {
+      const duration = Date.now() - startTime;
+      recordRequest(duration, true);
+      feedback.textContent = '✅ Loaded successfully!';
+      feedback.className = 'valid';
+      loadingOverlay.style.display = 'none';
+      addLog(`Successfully loaded: ${url} (${duration}ms)`, 'success');
+    };
+    
+    iframe.onerror = () => {
+      const duration = Date.now() - startTime;
+      recordRequest(duration, false);
+      feedback.textContent = '⚠️ Failed to load. Check URL or try another proxy.';
+      feedback.className = 'error';
+      loadingOverlay.style.display = 'none';
+      addLog(`Failed to load: ${url}`, 'error');
+    };
+    
+    setTimeout(() => {
+      if (loadingOverlay.style.display === 'flex') {
+        const duration = Date.now() - startTime;
+        recordRequest(duration, false);
+        feedback.textContent = '⏱️ Request timeout. Try another proxy.';
+        feedback.className = 'error';
+        loadingOverlay.style.display = 'none';
+        addLog(`Timeout loading: ${url}`, 'warn');
+      }
+    }, settings.timeout);
+  } catch (err) {
+    const duration = Date.now() - startTime;
+    recordRequest(duration, false);
+    feedback.textContent = '❌ Error: ' + err.message;
+    feedback.className = 'error';
+    loadingOverlay.style.display = 'none';
+    addLog(`Error: ${err.message}`, 'error');
+  }
+});
+
+urlInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') goBtn.click();
+});
+
+// ===== SETTINGS =====
 document.getElementById('applySettings').addEventListener('click', () => {
   settings.proxyMethod = document.getElementById('proxyMethod').value;
   settings.proxyApi = document.getElementById('proxyApi').value;
@@ -1286,42 +1392,92 @@ document.getElementById('applySettings').addEventListener('click', () => {
   settings.handleAPI = document.getElementById('handleAPI').checked;
   settings.handleSocial = document.getElementById('handleSocial').checked;
   settings.handleDynamic = document.getElementById('handleDynamic').checked;
+  settings.responseFilter = document.getElementById('responseFilter').value;
+  settings.dohProvider = document.getElementById('dohProvider').value;
   
-  addLog('✅ All settings applied successfully', 'success');
+  feedback.textContent = '✅ Settings applied successfully!';
+  feedback.className = 'valid';
+  addLog('Settings applied', 'success');
+  
+  setTimeout(() => {
+    feedback.textContent = '';
+  }, 3000);
 });
 
 document.getElementById('clearCache').addEventListener('click', () => {
   cache.clear();
-  addLog('🗑️ Cache cleared - ' + (250 - cache.cache.size) + ' items removed', 'info');
+  state.cacheHits = 0;
+  updateStats();
+  addLog('Cache cleared', 'success');
+  feedback.textContent = '✅ Cache cleared!';
+  feedback.className = 'valid';
+  setTimeout(() => { feedback.textContent = ''; }, 2000);
 });
 
 document.getElementById('testProxy').addEventListener('click', () => {
-  addLog('🧪 Testing proxy connectivity...', 'info');
-  // Test with google.com
-  loadUrlAdvanced('google.com');
+  feedback.textContent = '🧪 Testing proxy...';
+  feedback.className = 'info';
+  addLog('Testing proxy connection', 'info');
+  const testUrl = 'https://httpbin.org/get';
+  const proxiedUrl = PROXY_APIS[settings.proxyApi].build(testUrl);
+  
+  fetch(proxiedUrl, { mode: 'no-cors' })
+    .then(() => {
+      feedback.textContent = '✅ Proxy is working!';
+      feedback.className = 'valid';
+      addLog('Proxy test passed', 'success');
+    })
+    .catch(() => {
+      feedback.textContent = '❌ Proxy test failed';
+      feedback.className = 'error';
+      addLog('Proxy test failed', 'error');
+    });
 });
 
 document.getElementById('clearLogs').addEventListener('click', () => {
   logsContainer.innerHTML = '<div class="log-entry info">[SYSTEM] Logs cleared</div>';
-  addLog('Logs cleared', 'info');
+  addLog('Logs cleared', 'success');
 });
 
 document.getElementById('downloadLogs').addEventListener('click', () => {
-  const logs = Array.from(logsContainer.children).map(el => el.textContent).join('\n');
+  const logs = Array.from(logsContainer.querySelectorAll('.log-entry')).map(e => e.textContent).join('\n');
   const blob = new Blob([logs], { type: 'text/plain' });
-  const url = window.URL.createObjectURL(blob);
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'proxy-logs-' + new Date().toISOString().slice(0, 10) + '.txt';
+  a.download = `proxy-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.txt`;
   a.click();
-  window.URL.revokeObjectURL(url);
+  URL.revokeObjectURL(url);
+  addLog('Logs downloaded', 'success');
 });
 
 // ===== INITIALIZATION =====
-window.addEventListener('load', () => {
-  addLog('🚀 Universal Proxy Pro v9.0 ready - Full URL compatibility enabled', 'success');
-  addLog('✅ Supports: Websites, APIs, Media, Files, Social Media, Dynamic Content', 'info');
-});
+addLog('Universal Proxy Pro v10.0 initialized - Ready to use', 'success');
+updateStats();
+
+// Update proxy status
+const statusBadges = {
+  'allorigins': 'healthy',
+  'corsproxy': 'healthy',
+  'thingproxy': 'healthy',
+  'cloudflare': 'unhealthy'
+};
+
+proxyStatus.innerHTML = Object.entries(statusBadges).map(([api, status]) => 
+  `<div class="status-badge ${status}">● ${api.toUpperCase()}</div>`
+).join('');
+
+function showDashboard(e) {
+  e.preventDefault();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showAdvanced(e) {
+  e.preventDefault();
+  toggleAdvanced.checked = true;
+  advancedPanel.classList.add('show');
+  advancedPanel.scrollIntoView({ behavior: 'smooth' });
+}
 </script>
 
 </body>
